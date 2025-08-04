@@ -3,6 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
+        - nvm use 18
         - npm ci --cache .npm --prefer-offline
     build:
       commands:
@@ -15,3 +16,9 @@ frontend:
     paths:
       - .npm/**/*
       - node_modules/**/*
+  environment:
+    variables:
+      VITE_AWS_PROJECT_REGION: eu-west-1
+      VITE_AWS_COGNITO_REGION: eu-west-1
+      VITE_AWS_USER_POOLS_ID: eu-west-1_L44aHDwEX
+      VITE_AWS_USER_POOLS_WEB_CLIENT_ID: DocumentChatbotUsers
