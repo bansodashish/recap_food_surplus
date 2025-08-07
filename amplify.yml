@@ -6,8 +6,8 @@ frontend:
         - nvm use 20
         - node --version
         - npm --version
-        - rm -rf node_modules package-lock.json
-        - npm install
+        - rm -rf node_modules
+        - npm install --force
     build:
       commands:
         - npm run build
@@ -15,6 +15,3 @@ frontend:
     baseDirectory: dist
     files:
       - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*

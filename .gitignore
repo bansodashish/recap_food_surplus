@@ -1,1 +1,16 @@
 node_modules
+package-lock.json
+npm-shrinkwrap.json
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env.local
+.env.production
+.env.development
+
+# AWS Amplify
+.amplify/
+amplify-meta.json
