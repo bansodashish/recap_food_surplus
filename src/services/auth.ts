@@ -21,6 +21,11 @@ export interface AuthUser {
   name?: string;
   given_name?: string;
   family_name?: string;
+  // Subscription-related attributes
+  'custom:subscription_plan'?: 'free' | 'premium' | 'enterprise';
+  'custom:subscription_status'?: 'active' | 'cancelled' | 'past_due';
+  'custom:subscription_expires'?: string;
+  'custom:stripe_customer_id'?: string;
 }
 
 export interface SignUpParams {
@@ -112,10 +117,15 @@ class AuthService {
         name: attributes.name,
         given_name: attributes.given_name,
         family_name: attributes.family_name,
+        'custom:subscription_plan': (attributes['custom:subscription_plan'] as 'free' | 'premium' | 'enterprise') || 'free',
+        'custom:subscription_status': (attributes['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+        'custom:subscription_expires': attributes['custom:subscription_expires'],
+        'custom:stripe_customer_id': attributes['custom:stripe_customer_id']
       };
       
       return authUser;
     } catch (error) {
+      console.error('Error getting current user:', error);
       return null;
     }
   }
@@ -202,6 +212,79 @@ class AuthService {
     } catch (error) {
       console.error('Error changing password:', error);
       throw error;
+    }
+  }
+
+  // Subscription Management Methods
+  async updateSubscriptionPlan(plan: 'free' | 'premium' | 'enterprise', stripeCustomerId?: string) {
+    try {
+      const attributes: Record<string, string> = {
+        'custom:subscription_plan': plan,
+        'custom:subscription_status': 'active'
+      };
+      
+      if (stripeCustomerId) {
+        attributes['custom:stripe_customer_id'] = stripeCustomerId;
+      }
+      
+      // Set expiry date (1 month for premium, 1 year for enterprise)
+      const expiryDate = new Date();
+      if (plan === 'premium') {
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+      } else if (plan === 'enterprise') {
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      }
+      
+      if (plan !== 'free') {
+        attributes['custom:subscription_expires'] = expiryDate.toISOString();
+      }
+      
+      return await this.updateUserAttributes(attributes);
+    } catch (error) {
+      console.error('Error updating subscription plan:', error);
+      throw error;
+    }
+  }
+
+  async cancelSubscription() {
+    try {
+      return await this.updateUserAttributes({
+        'custom:subscription_status': 'cancelled'
+      });
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      throw error;
+    }
+  }
+
+  async checkSubscriptionStatus(): Promise<{
+    plan: string;
+    status: string;
+    expires?: Date;
+    isActive: boolean;
+  }> {
+    try {
+      const attributes = await fetchUserAttributes();
+      const plan = attributes['custom:subscription_plan'] || 'free';
+      const status = attributes['custom:subscription_status'] || 'active';
+      const expiresStr = attributes['custom:subscription_expires'];
+      
+      const expires = expiresStr ? new Date(expiresStr) : undefined;
+      const isActive = status === 'active' && (!expires || expires > new Date());
+      
+      return {
+        plan,
+        status,
+        expires,
+        isActive
+      };
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+      return {
+        plan: 'free',
+        status: 'active',
+        isActive: true
+      };
     }
   }
 }
