@@ -10,6 +10,9 @@ export function SubscriptionPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isLoading, setIsLoading] = useState(false);
 
+  console.log('🎯 SubscriptionPage user:', user);
+  console.log('🎯 User subscription plan:', user?.subscriptionPlan);
+
   const plans = [
     {
       name: 'Free',

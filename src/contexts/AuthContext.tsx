@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Check with AWS Cognito for current user
       const cognitoUser = await authService.getCurrentUser();
+      console.log('🔍 Cognito user data:', cognitoUser);
       if (cognitoUser) {
         const user: User = {
           id: cognitoUser.sub,
@@ -61,7 +62,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             : undefined,
           createdAt: new Date(),
         };
+        console.log('👤 Setting user state:', user);
         setUser(user);
+      } else {
+        console.log('❌ No authenticated user found');
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
