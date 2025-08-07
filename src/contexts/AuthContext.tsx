@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { authService } from '../services/auth';
 
 export type SubscriptionPlan = 'free' | 'premium' | 'enterprise';
 
@@ -46,34 +47,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuthState = async () => {
     try {
-      // In real implementation, this would check with AWS Cognito
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+      // Check with AWS Cognito for current user
+      const cognitoUser = await authService.getCurrentUser();
+      if (cognitoUser) {
+        const user: User = {
+          id: cognitoUser.sub,
+          email: cognitoUser.email,
+          name: cognitoUser.name || cognitoUser.given_name || cognitoUser.email.split('@')[0],
+          subscriptionPlan: cognitoUser['custom:subscription_plan'] || 'free',
+          subscriptionStatus: (cognitoUser['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+          subscriptionExpiry: cognitoUser['custom:subscription_expires'] 
+            ? new Date(cognitoUser['custom:subscription_expires'])
+            : undefined,
+          createdAt: new Date(),
+        };
+        setUser(user);
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signIn = async (email: string, _password: string) => {
+  const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock implementation - replace with AWS Cognito
-      const mockUser: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        subscriptionPlan: 'free',
-        subscriptionStatus: 'active',
-        createdAt: new Date(),
-      };
+      // Use AWS Cognito for authentication
+      await authService.signIn({ username: email, password });
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // Get the authenticated user data
+      const cognitoUser = await authService.getCurrentUser();
+      if (cognitoUser) {
+        const user: User = {
+          id: cognitoUser.sub,
+          email: cognitoUser.email,
+          name: cognitoUser.name || cognitoUser.given_name || cognitoUser.email.split('@')[0],
+          subscriptionPlan: cognitoUser['custom:subscription_plan'] || 'free',
+          subscriptionStatus: (cognitoUser['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+          subscriptionExpiry: cognitoUser['custom:subscription_expires'] 
+            ? new Date(cognitoUser['custom:subscription_expires'])
+            : undefined,
+          createdAt: new Date(),
+        };
+        setUser(user);
+      }
     } catch (error) {
+      console.error('Sign in error:', error);
       throw new Error('Invalid credentials');
     } finally {
       setIsLoading(false);
@@ -103,20 +124,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    setUser(null);
-    localStorage.removeItem('user');
+    try {
+      await authService.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setUser(null); // Still clear the user state locally
+    }
   };
 
   const updateSubscription = async (plan: SubscriptionPlan) => {
     if (user) {
-      const updatedUser = {
-        ...user,
-        subscriptionPlan: plan,
-        subscriptionStatus: 'active' as const,
-        subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      try {
+        await authService.updateSubscriptionPlan(plan);
+        
+        // Refresh user data from Cognito
+        const updatedCognitoUser = await authService.getCurrentUser();
+        if (updatedCognitoUser) {
+          const updatedUser: User = {
+            ...user,
+            subscriptionPlan: updatedCognitoUser['custom:subscription_plan'] || plan,
+            subscriptionStatus: (updatedCognitoUser['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+            subscriptionExpiry: updatedCognitoUser['custom:subscription_expires'] 
+              ? new Date(updatedCognitoUser['custom:subscription_expires'])
+              : undefined,
+          };
+          setUser(updatedUser);
+        }
+      } catch (error) {
+        console.error('Error updating subscription:', error);
+        throw error;
+      }
     }
   };
 
