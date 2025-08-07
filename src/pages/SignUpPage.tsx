@@ -67,7 +67,8 @@ export function SignUpPage() {
         city: formData.city,
         country: formData.country
       });
-      setStep(3);
+      // Redirect to confirmation page with email parameter
+      navigate(`/confirm-signup?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -81,7 +82,8 @@ export function SignUpPage() {
 
     try {
       await signUp(formData.email, formData.password, formData.name);
-      setStep(3);
+      // Redirect to confirmation page with email parameter
+      navigate(`/confirm-signup?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -103,12 +105,11 @@ export function SignUpPage() {
             <p className="mt-2 text-gray-600">
               {step === 1 && 'Let\'s start with your basic information'}
               {step === 2 && 'Tell us more about yourself (optional)'}
-              {step === 3 && 'Check your email to verify your account'}
             </p>
           </div>
 
           {/* Progress Indicator */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-center mb-8">
             <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 step >= 1 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
@@ -116,19 +117,11 @@ export function SignUpPage() {
                 1
               </div>
               <div className={`w-16 h-1 mx-2 ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`} />
-            </div>
-            <div className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                 step >= 2 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
               }`}>
                 2
               </div>
-              <div className={`w-16 h-1 mx-2 ${step >= 3 ? 'bg-primary-600' : 'bg-gray-200'}`} />
-            </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              step >= 3 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'
-            }`}>
-              3
             </div>
           </div>
 
@@ -333,50 +326,18 @@ export function SignUpPage() {
             </form>
           )}
 
-          {/* Step 3: Verification */}
-          {step === 3 && (
-            <div className="text-center space-y-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Mail className="h-8 w-8 text-green-600" />
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Check Your Email</h3>
-                <p className="text-gray-600">
-                  We've sent a verification link to <strong>{formData.email}</strong>. 
-                  Please check your inbox and click the link to verify your account.
-                </p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-800 text-sm">
-                  <strong>Next Steps:</strong> After verifying your email, you can sign in and choose your subscription plan to unlock all features.
-                </p>
-              </div>
-
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-600">
+              Already have an account?{' '}
               <button
                 onClick={goToLogin}
-                className="w-full bg-primary-600 text-white py-3 px-4 rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium"
+                className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                Go to Sign In
+                Sign in here
               </button>
-            </div>
-          )}
-
-          {/* Footer */}
-          {step !== 3 && (
-            <div className="mt-8 text-center">
-              <p className="text-gray-600">
-                Already have an account?{' '}
-                <button
-                  onClick={goToLogin}
-                  className="text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Sign in here
-                </button>
-              </p>
-            </div>
-          )}
+            </p>
+          </div>
         </div>
       </div>
     </div>

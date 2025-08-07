@@ -11,6 +11,7 @@ import { AboutPage } from './pages/AboutPage';
 import { SustainabilityPage } from './pages/SustainabilityPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { ConfirmSignUpPage } from './pages/ConfirmSignUpPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
@@ -47,6 +48,7 @@ function App() {
               <Route path="/sustainability" element={<SustainabilityPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
               <Route 
                 path="/profile" 
                 element={

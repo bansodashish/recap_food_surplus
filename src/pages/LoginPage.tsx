@@ -7,7 +7,7 @@ export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | React.ReactNode>('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,8 +35,29 @@ export function LoginPage() {
     try {
       await signIn(formData.email, formData.password);
       navigate(from, { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      // Handle specific error types
+      if (err.name === 'UserNotConfirmedException') {
+        setError(
+          <div>
+            Your account is not confirmed yet.{' '}
+            <button
+              onClick={() => navigate(`/confirm-signup?email=${encodeURIComponent(formData.email)}`)}
+              className="text-primary-600 hover:text-primary-700 font-medium underline"
+            >
+              Click here to confirm your account
+            </button>
+          </div>
+        );
+      } else if (err.name === 'UserNotFoundException') {
+        setError('User not found. Please check your email or sign up for a new account.');
+      } else if (err.name === 'NotAuthorizedException') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Authentication failed');
+      }
     } finally {
       setIsLoading(false);
     }
