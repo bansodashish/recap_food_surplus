@@ -15,7 +15,7 @@ export function LoginPage() {
     confirmPassword: ''
   });
 
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';

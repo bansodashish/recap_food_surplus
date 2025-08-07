@@ -1,65 +1,15 @@
-import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { User, Crown, Calendar, CreditCard, Settings, Bell, Shield, BarChart3, Edit3, Save, X, Phone, Building, MapPin, Globe } from 'lucide-react';
+import { User, Crown, Calendar, CreditCard, Settings, Bell, Shield, BarChart3 } from 'lucide-react';
 
 export function ProfilePage() {
-  const { user, signOut, updateProfile } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    company: user?.company || '',
-    address: user?.address || '',
-    city: user?.city || '',
-    country: user?.country || ''
-  });
 
   if (!user) {
     navigate('/login');
     return null;
   }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSaveProfile = async () => {
-    setIsLoading(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      await updateProfile(formData);
-      setSuccess('Profile updated successfully!');
-      setIsEditing(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setFormData({
-      name: user?.name || '',
-      phone: user?.phone || '',
-      company: user?.company || '',
-      address: user?.address || '',
-      city: user?.city || '',
-      country: user?.country || ''
-    });
-    setIsEditing(false);
-    setError('');
-    setSuccess('');
-  };
 
   const handleSignOut = async () => {
     await signOut();

@@ -2,12 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, Crown, ArrowRight } from 'lucide-react';
 import { subscriptionService } from '../services/subscription';
-import { useAuth } from '../contexts/AuthContext';
 
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [error, setError] = useState('');
 
