@@ -33,15 +33,7 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        await signIn(formData.email, formData.password);
-      } else {
-        if (formData.password !== formData.confirmPassword) {
-          setError('Passwords do not match');
-          return;
-        }
-        await signUp(formData.email, formData.password, formData.name);
-      }
+      await signIn(formData.email, formData.password);
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -57,13 +49,10 @@ export function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
-              {isLogin ? 'Welcome Back' : 'Join Recap Food'}
+              Welcome Back
             </h2>
             <p className="mt-2 text-gray-600">
-              {isLogin 
-                ? 'Sign in to your account to continue reducing food waste' 
-                : 'Create an account to start making a difference'
-              }
+              Sign in to your account to continue reducing food waste
             </p>
           </div>
 
@@ -80,12 +69,8 @@ export function LoginPage() {
               Sign In
             </button>
             <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                !isLogin 
-                  ? 'bg-white text-primary-600 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              onClick={() => navigate('/signup')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-500 hover:text-gray-700`}
             >
               Sign Up
             </button>

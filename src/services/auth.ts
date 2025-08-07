@@ -21,11 +21,17 @@ export interface AuthUser {
   name?: string;
   given_name?: string;
   family_name?: string;
+  phone_number?: string;
+  address?: string;
   // Subscription-related attributes
   'custom:subscription_plan'?: 'free' | 'premium' | 'enterprise';
   'custom:subscription_status'?: 'active' | 'cancelled' | 'past_due';
   'custom:subscription_expires'?: string;
   'custom:stripe_customer_id'?: string;
+  // Profile attributes
+  'custom:company'?: string;
+  'custom:city'?: string;
+  'custom:country'?: string;
 }
 
 export interface SignUpParams {
@@ -33,6 +39,11 @@ export interface SignUpParams {
   password: string;
   email: string;
   name?: string;
+  phone?: string;
+  company?: string;
+  address?: string;
+  city?: string;
+  country?: string;
 }
 
 export interface SignInParams {
@@ -53,16 +64,28 @@ export interface ResetPasswordParams {
 
 class AuthService {
   // Sign up a new user
-  async signUp({ username, password, email, name }: SignUpParams) {
+  async signUp({ username, password, email, name, phone, company, address, city, country }: SignUpParams) {
     try {
+      const userAttributes: Record<string, string> = {
+        email,
+        // Set default subscription attributes
+        'custom:subscription_plan': 'free',
+        'custom:subscription_status': 'active',
+      };
+
+      // Add optional attributes if provided
+      if (name) userAttributes.name = name;
+      if (phone) userAttributes.phone_number = phone;
+      if (company) userAttributes['custom:company'] = company;
+      if (address) userAttributes.address = address;
+      if (city) userAttributes['custom:city'] = city;
+      if (country) userAttributes['custom:country'] = country;
+
       const result = await signUp({
         username,
         password,
         options: {
-          userAttributes: {
-            email,
-            ...(name && { name }),
-          },
+          userAttributes,
         },
       });
       return result;
@@ -117,10 +140,15 @@ class AuthService {
         name: attributes.name,
         given_name: attributes.given_name,
         family_name: attributes.family_name,
+        phone_number: attributes.phone_number,
+        address: attributes.address,
         'custom:subscription_plan': (attributes['custom:subscription_plan'] as 'free' | 'premium' | 'enterprise') || 'free',
         'custom:subscription_status': (attributes['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
         'custom:subscription_expires': attributes['custom:subscription_expires'],
-        'custom:stripe_customer_id': attributes['custom:stripe_customer_id']
+        'custom:stripe_customer_id': attributes['custom:stripe_customer_id'],
+        'custom:company': attributes['custom:company'],
+        'custom:city': attributes['custom:city'],
+        'custom:country': attributes['custom:country']
       };
       
       return authUser;
@@ -201,6 +229,33 @@ class AuthService {
       return await updateUserAttributes({ userAttributes: attributes });
     } catch (error) {
       console.error('Error updating user attributes:', error);
+      throw error;
+    }
+  }
+
+  // Update user profile with comprehensive information
+  async updateUserProfile(profileData: {
+    name?: string;
+    phone?: string;
+    company?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+  }) {
+    try {
+      const attributes: Record<string, string> = {};
+      
+      // Map profile data to Cognito attributes
+      if (profileData.name) attributes.name = profileData.name;
+      if (profileData.phone) attributes.phone_number = profileData.phone;
+      if (profileData.company) attributes['custom:company'] = profileData.company;
+      if (profileData.address) attributes.address = profileData.address;
+      if (profileData.city) attributes['custom:city'] = profileData.city;
+      if (profileData.country) attributes['custom:country'] = profileData.country;
+
+      return await this.updateUserAttributes(attributes);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
       throw error;
     }
   }

@@ -160,6 +160,112 @@ class SubscriptionService {
   getPlanPricing(plan: SubscriptionPlan) {
     return SUBSCRIPTION_PLANS.find(p => p.plan === plan);
   }
+
+  // Handle successful payment and update Cognito
+  async handlePaymentSuccess(sessionId: string, planId: SubscriptionPlan) {
+    try {
+      // Update user's subscription in Cognito
+      await authService.updateSubscriptionPlan(planId);
+      
+      // Optionally store Stripe session/customer info
+      const sessionData = await this.getCheckoutSession(sessionId);
+      
+      if (sessionData?.customer) {
+        await authService.updateUserAttributes({
+          'custom:stripe_customer_id': sessionData.customer as string,
+          'custom:subscription_expires': this.calculateExpirationDate().toISOString()
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error handling payment success:', error);
+      throw error;
+    }
+  }
+
+  // Get checkout session details
+  async getCheckoutSession(sessionId: string) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/subscription/session/${sessionId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await authService.getAccessToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to retrieve session');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error retrieving checkout session:', error);
+      throw error;
+    }
+  }
+
+  // Calculate subscription expiration date (1 year from now for yearly, 1 month for monthly)
+  private calculateExpirationDate(billingCycle: 'monthly' | 'yearly' = 'yearly'): Date {
+    const now = new Date();
+    if (billingCycle === 'yearly') {
+      return new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+    } else {
+      return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    }
+  }
+
+  // Process subscription upgrade/downgrade
+  async upgradeSubscription(newPlan: SubscriptionPlan, billingCycle: 'monthly' | 'yearly' = 'yearly') {
+    try {
+      const currentUser = await authService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      if (newPlan === 'free') {
+        // Downgrade to free plan
+        await authService.updateSubscriptionPlan('free');
+        return { success: true };
+      }
+
+      // For premium/enterprise, redirect to Stripe checkout
+      return await this.createCheckoutSession(newPlan, billingCycle, currentUser.sub);
+    } catch (error) {
+      console.error('Error upgrading subscription:', error);
+      throw error;
+    }
+  }
+
+  // Cancel subscription
+  async cancelSubscription() {
+    try {
+      // Update subscription status in Cognito
+      await authService.updateUserAttributes({
+        'custom:subscription_status': 'cancelled'
+      });
+
+      // Optionally call Stripe API to cancel subscription
+      // This would require backend API call
+      const response = await fetch(`${this.apiBaseUrl}/subscription/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await authService.getAccessToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel subscription');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      throw error;
+    }
+  }
 }
 
 export const subscriptionService = new SubscriptionService();

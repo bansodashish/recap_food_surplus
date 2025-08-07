@@ -12,6 +12,11 @@ export interface User {
   subscriptionExpiry?: Date;
   createdAt: Date;
   avatar?: string;
+  phone?: string;
+  company?: string;
+  address?: string;
+  city?: string;
+  country?: string;
 }
 
 interface AuthContextType {
@@ -19,9 +24,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, profileData?: { phone?: string; company?: string; address?: string; city?: string; country?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   updateSubscription: (plan: SubscriptionPlan) => Promise<void>;
+  updateProfile: (profileData: { name?: string; phone?: string; company?: string; address?: string; city?: string; country?: string }) => Promise<void>;
   canListItems: () => boolean;
   canAccessFeature: (feature: string) => boolean;
 }
@@ -61,6 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? new Date(cognitoUser['custom:subscription_expires'])
             : undefined,
           createdAt: new Date(),
+          phone: cognitoUser.phone_number,
+          company: cognitoUser['custom:company'],
+          address: cognitoUser.address,
+          city: cognitoUser['custom:city'],
+          country: cognitoUser['custom:country'],
         };
         console.log('👤 Setting user state:', user);
         setUser(user);
@@ -94,6 +105,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? new Date(cognitoUser['custom:subscription_expires'])
             : undefined,
           createdAt: new Date(),
+          phone: cognitoUser.phone_number,
+          company: cognitoUser['custom:company'],
+          address: cognitoUser.address,
+          city: cognitoUser['custom:city'],
+          country: cognitoUser['custom:country'],
         };
         setUser(user);
       }
@@ -105,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, profileData?: { phone?: string; company?: string; address?: string; city?: string; country?: string }) => {
     setIsLoading(true);
     try {
       // Use AWS Cognito for user registration
@@ -113,7 +129,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         username: email,
         password,
         email,
-        name
+        name,
+        phone: profileData?.phone,
+        company: profileData?.company,
+        address: profileData?.address,
+        city: profileData?.city,
+        country: profileData?.country
       });
       
       // After successful signup, the user needs to verify their email
@@ -161,6 +182,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (profileData: { name?: string; phone?: string; company?: string; address?: string; city?: string; country?: string }) => {
+    if (user) {
+      try {
+        await authService.updateUserProfile(profileData);
+        
+        // Refresh user data from Cognito
+        const updatedCognitoUser = await authService.getCurrentUser();
+        if (updatedCognitoUser) {
+          const updatedUser: User = {
+            ...user,
+            name: updatedCognitoUser.name || updatedCognitoUser.given_name || user.name,
+            phone: updatedCognitoUser.phone_number,
+            company: updatedCognitoUser['custom:company'],
+            address: updatedCognitoUser.address,
+            city: updatedCognitoUser['custom:city'],
+            country: updatedCognitoUser['custom:country'],
+          };
+          setUser(updatedUser);
+        }
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        throw error;
+      }
+    }
+  };
+
   const canListItems = () => {
     return user?.subscriptionPlan === 'premium' || user?.subscriptionPlan === 'enterprise';
   };
@@ -187,6 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     updateSubscription,
+    updateProfile,
     canListItems,
     canAccessFeature,
   };

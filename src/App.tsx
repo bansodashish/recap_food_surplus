@@ -10,8 +10,10 @@ import { SellPage } from './pages/SellPage';
 import { AboutPage } from './pages/AboutPage';
 import { SustainabilityPage } from './pages/SustainabilityPage';
 import { LoginPage } from './pages/LoginPage';
+import { SignUpPage } from './pages/SignUpPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
+import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import { Footer } from './components/Footer';
 
 function App() {
@@ -44,6 +46,7 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/sustainability" element={<SustainabilityPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
               <Route 
                 path="/profile" 
                 element={
@@ -53,6 +56,14 @@ function App() {
                 } 
               />
               <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route 
+                path="/subscription/success" 
+                element={
+                  <ProtectedRoute>
+                    <PaymentSuccessPage />
+                  </ProtectedRoute>
+                } 
+              />
             </Routes>
           </main>
           <Footer />
