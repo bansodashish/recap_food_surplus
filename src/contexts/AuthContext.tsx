@@ -101,22 +101,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, _password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     try {
-      // Mock implementation - replace with AWS Cognito
-      const mockUser: User = {
-        id: Date.now().toString(),
+      // Use AWS Cognito for user registration
+      await authService.signUp({
+        username: email,
+        password,
         email,
-        name,
-        subscriptionPlan: 'free',
-        subscriptionStatus: 'active',
-        createdAt: new Date(),
-      };
+        name
+      });
       
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      // After successful signup, the user needs to verify their email
+      // The actual sign-in will happen after email verification
     } catch (error) {
+      console.error('Sign up error:', error);
       throw new Error('Failed to create account');
     } finally {
       setIsLoading(false);
