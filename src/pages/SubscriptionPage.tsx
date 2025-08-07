@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Check, Crown, Building, Users } from 'lucide-react';
+import { subscriptionService } from '../services/subscription';
 
 export function SubscriptionPage() {
   const { user, updateSubscription } = useAuth();
@@ -69,7 +70,7 @@ export function SubscriptionPage() {
         'Commission-free transactions*'
       ],
       limitedFeatures: [],
-      buttonText: 'Start Premium Trial',
+      buttonText: 'Upgrade to Premium',
       buttonVariant: 'primary' as const,
       popular: true,
       planId: 'premium' as const,
@@ -133,17 +134,30 @@ export function SubscriptionPage() {
       }
 
       if (planId === 'premium') {
-        // In real implementation, this would integrate with Stripe
-        console.log('Redirecting to Stripe payment...');
-        // For now, just update the subscription
-        await updateSubscription(planId);
+        // Redirect to Stripe Checkout for premium plan
+        try {
+          await subscriptionService.createCheckoutSession(
+            'premium',
+            billingCycle,
+            user.id
+          );
+          // The method will automatically redirect to Stripe checkout
+          return;
+        } catch (stripeError) {
+          console.error('Error creating Stripe checkout session:', stripeError);
+          // Fallback message for payment issues
+          alert('Payment gateway temporarily unavailable. Please try again later or contact support.');
+          return;
+        }
       } else {
+        // Free plan - direct update
         await updateSubscription(planId);
       }
       
       navigate('/profile');
     } catch (error) {
       console.error('Error updating subscription:', error);
+      alert('An error occurred while updating your subscription. Please try again.');
     } finally {
       setIsLoading(false);
     }
