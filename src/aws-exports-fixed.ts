@@ -3,7 +3,7 @@ const awsmobile = {
   aws_project_region: "eu-west-1",
   aws_cognito_region: "eu-west-1",
   aws_user_pools_id: "eu-west-1_L44aHDwEX",
-  aws_user_pools_web_client_id: "DocumentChatbotUsers",
+  aws_user_pools_web_client_id: "1sh3gt6g7eupf69i8c1ht8ang0",
   oauth: {},
   aws_cognito_username_attributes: ["EMAIL"],
   aws_cognito_social_providers: [],
