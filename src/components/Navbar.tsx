@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Leaf, User, ShoppingCart } from 'lucide-react';
+import { Menu, X, Leaf, User, ShoppingCart, Crown, LogOut } from 'lucide-react';
 import { cn } from '../utils';
+import { useAuth } from '../contexts/AuthContext';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -16,6 +17,11 @@ const navigation = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -51,13 +57,45 @@ export function Navbar() {
               <button className="p-2 text-gray-400 hover:text-gray-500">
                 <ShoppingCart className="h-6 w-6" />
               </button>
-              <Link
-                to="/login"
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors duration-200"
-              >
-                <User className="h-4 w-4" />
-                <span>Login</span>
-              </Link>
+              
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <Link
+                    to="/subscription"
+                    className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors duration-200"
+                  >
+                    <Crown className="h-4 w-4" />
+                    <span>
+                      {user.subscriptionPlan === 'free' ? 'Upgrade' : 
+                       user.subscriptionPlan === 'premium' ? 'Premium' : 'Enterprise'}
+                    </span>
+                  </Link>
+                  
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors duration-200"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{user.name}</span>
+                  </Link>
+                  
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md transition-colors duration-200"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Login</span>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -97,14 +135,50 @@ export function Navbar() {
               </Link>
             ))}
             <div className="border-t border-gray-200 pt-4">
-              <Link
-                to="/login"
-                className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md mx-3"
-                onClick={() => setIsOpen(false)}
-              >
-                <User className="h-4 w-4" />
-                <span>Login</span>
-              </Link>
+              {user ? (
+                <div className="space-y-2">
+                  <Link
+                    to="/subscription"
+                    className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-primary-600 hover:text-primary-700 rounded-md mx-3"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Crown className="h-4 w-4" />
+                    <span>
+                      {user.subscriptionPlan === 'free' ? 'Upgrade Plan' : 
+                       user.subscriptionPlan === 'premium' ? 'Premium Plan' : 'Enterprise Plan'}
+                    </span>
+                  </Link>
+                  
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 rounded-md mx-3"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>{user.name}</span>
+                  </Link>
+                  
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-gray-500 hover:text-gray-700 rounded-md mx-3 w-full text-left"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="flex items-center space-x-2 px-3 py-2 text-base font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md mx-3"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <User className="h-4 w-4" />
+                  <span>Login</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

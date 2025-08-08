@@ -1,15 +1,24 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | React.ReactNode>('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
     confirmPassword: ''
   });
+
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -18,10 +27,40 @@ export function LoginPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would handle authentication
-    console.log('Form submitted:', formData);
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await signIn(formData.email, formData.password);
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      // Handle specific error types
+      if (err.name === 'UserNotConfirmedException') {
+        setError(
+          <div>
+            Your account is not confirmed yet.{' '}
+            <button
+              onClick={() => navigate(`/confirm-signup?email=${encodeURIComponent(formData.email)}`)}
+              className="text-primary-600 hover:text-primary-700 font-medium underline"
+            >
+              Click here to confirm your account
+            </button>
+          </div>
+        );
+      } else if (err.name === 'UserNotFoundException') {
+        setError('User not found. Please check your email or sign up for a new account.');
+      } else if (err.name === 'NotAuthorizedException') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Authentication failed');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,13 +70,10 @@ export function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
-              {isLogin ? 'Welcome Back' : 'Join Recap Food'}
+              Welcome Back
             </h2>
             <p className="mt-2 text-gray-600">
-              {isLogin 
-                ? 'Sign in to your account to continue reducing food waste' 
-                : 'Create an account to start making a difference'
-              }
+              Sign in to your account to continue reducing food waste
             </p>
           </div>
 
@@ -54,12 +90,8 @@ export function LoginPage() {
               Sign In
             </button>
             <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                !isLogin 
-                  ? 'bg-white text-primary-600 shadow-sm' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              onClick={() => navigate('/signup')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors text-gray-500 hover:text-gray-700`}
             >
               Sign Up
             </button>
@@ -67,6 +99,11 @@ export function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                {error}
+              </div>
+            )}
             {!isLogin && (
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -171,10 +208,20 @@ export function LoginPage() {
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isLogin ? 'Signing In...' : 'Creating Account...'}
+                </>
+              ) : (
+                <>
+                  {isLogin ? 'Sign In' : 'Create Account'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </button>
           </form>
 
