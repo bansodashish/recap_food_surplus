@@ -1,9 +1,9 @@
-// AWS Amplify Configuration for TypeScript
+// AWS Amplify Configuration for TypeScript - Updated with new User Pool
 const awsmobile = {
   aws_project_region: "eu-west-1",
   aws_cognito_region: "eu-west-1",
-  aws_user_pools_id: "eu-west-1_In6BAFcN1",
-  aws_user_pools_web_client_id: "1sh3gt6g7eupf69i8c1ht8ang0",
+  aws_user_pools_id: "eu-west-1_Y2tRumZ22",
+  aws_user_pools_web_client_id: "flshpq7e5kdqa00fre30g0t9p",
   oauth: {},
   aws_cognito_username_attributes: ["EMAIL"],
   aws_cognito_social_providers: [],
