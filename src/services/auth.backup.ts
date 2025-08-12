@@ -46,15 +46,6 @@ export interface SignUpParams {
   country?: string;
 }
 
-export interface BasicSignUpParams {
-  username: string;
-  password: string;
-  email: string;
-  name?: string;
-  phone?: string;
-  address?: string;
-}
-
 export interface SignInParams {
   username: string;
   password: string;
@@ -72,8 +63,8 @@ export interface ResetPasswordParams {
 }
 
 class AuthService {
-  // Sign up a new user - Basic version without custom attributes
-  async signUp({ username, password, email, name, phone, address }: BasicSignUpParams) {
+  // Sign up a new user
+  async signUp({ username, password, email, name, phone, address }: Omit<SignUpParams, 'company' | 'city' | 'country'>) {
     try {
       const userAttributes: Record<string, string> = {
         email,
@@ -83,37 +74,6 @@ class AuthService {
       if (name) userAttributes.name = name;
       if (phone) userAttributes.phone_number = phone;
       if (address) userAttributes.address = address;
-
-      const result = await signUp({
-        username,
-        password,
-        options: {
-          userAttributes,
-        },
-      });
-      return result;
-    } catch (error) {
-      console.error('Error signing up:', error);
-      throw error;
-    }
-  }
-
-  // Sign up with custom attributes (use after adding custom attributes to Cognito)
-  async signUpWithCustomAttributes({ username, password, email, name, phone, company, address, city, country }: SignUpParams) {
-    try {
-      const userAttributes: Record<string, string> = {
-        email,
-        'custom:subscription_plan': 'free',
-        'custom:subscription_status': 'active',
-      };
-
-      // Add optional attributes if provided
-      if (name) userAttributes.name = name;
-      if (phone) userAttributes.phone_number = phone;
-      if (company) userAttributes['custom:company'] = company;
-      if (address) userAttributes.address = address;
-      if (city) userAttributes['custom:city'] = city;
-      if (country) userAttributes['custom:country'] = country;
 
       const result = await signUp({
         username,
