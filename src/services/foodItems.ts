@@ -1,12 +1,13 @@
 import type { FoodItem, CreateFoodItemRequest, FoodItemFilters } from '../types/foodItem';
 import { s3Service } from './s3';
+import { localStorageService } from './localStorage';
 
 // Mock API base URL - replace with your actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export class FoodItemsService {
   /**
-   * Get user's item count for subscription limit checking
+   * Get user's item count for subscription limit checking (includes local items)
    */
   async getUserItemCount(userId: string): Promise<number> {
     try {
@@ -24,11 +25,14 @@ export class FoodItemsService {
       }
 
       const { count } = await response.json();
-      return count;
+      
+      // Add local items count
+      const localCount = localStorageService.getUserItemCount(userId);
+      return count + localCount;
     } catch (error) {
-      console.error('Error getting user item count:', error);
-      // Fallback to 0 if we can't determine count
-      return 0;
+      console.error('Error getting user item count from API, using local storage:', error);
+      // Fallback to local storage only
+      return localStorageService.getUserItemCount(userId);
     }
   }
 
@@ -195,7 +199,7 @@ export class FoodItemsService {
   }
 
   /**
-   * Get food items by user ID
+   * Get food items by user ID with localStorage fallback
    */
   async getUserFoodItems(userId: string): Promise<FoodItem[]> {
     try {
@@ -206,7 +210,7 @@ export class FoodItemsService {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user food items');
+        throw new Error('Failed to fetch user food items from API');
       }
 
       const items: FoodItem[] = await response.json();
@@ -218,8 +222,20 @@ export class FoodItemsService {
         expiresAt: new Date(item.expiresAt),
       }));
     } catch (error) {
-      console.error('Error fetching user food items:', error);
-      throw error;
+      console.error('API failed, falling back to local storage:', error);
+      
+      // Fallback to local storage
+      const localItems = localStorageService.getUserLocalItems(userId);
+      console.log(`Found ${localItems.length} items in local storage for user ${userId}`);
+      
+      // Convert LocalFoodItem to FoodItem format
+      return localItems.map(localItem => ({
+        ...localItem,
+        // Remove local-specific fields
+        syncedToAPI: undefined,
+        lastSync: undefined,
+        localId: undefined,
+      } as FoodItem));
     }
   }
 

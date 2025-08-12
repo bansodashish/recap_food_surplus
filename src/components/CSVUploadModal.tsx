@@ -98,12 +98,22 @@ export const CSVUploadModal: React.FC<CSVUploadProps> = ({ onUploadComplete, onC
           {/* Template Download */}
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Need a template?</span>
-            <button
-              onClick={downloadTemplate}
-              className="text-teal-600 hover:text-teal-800 text-sm font-medium"
-            >
-              Download CSV Template
-            </button>
+            <div className="flex space-x-2">
+              <a
+                href="/sample-food-items.csv"
+                download="sample-food-items.csv"
+                className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+              >
+                Download Sample
+              </a>
+              <span className="text-gray-400">|</span>
+              <button
+                onClick={downloadTemplate}
+                className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+              >
+                Generate Template
+              </button>
+            </div>
           </div>
 
           {/* File Selection */}

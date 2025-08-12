@@ -1,0 +1,6 @@
+name,description,category,condition,type,price,quantity,unit,expiryDate,address,city,zipCode
+"Organic Apples","Fresh organic apples from local farm","fruits","good","sale","3.99","5","kg","2024-08-20","123 Farm St","Cityville","12345"
+"Day-old Bread","Fresh bread from yesterday","bakery","good","donation","","2","loaves","2024-08-15","456 Bakery Ave","Townsburg","67890"
+"Fresh Spinach","Organic spinach leaves","vegetables","excellent","sale","2.50","1","kg","2024-08-18","789 Garden Rd","Greentown","11111"
+"Canned Tomatoes","Unopened canned tomatoes","pantry","excellent","donation","","3","cans","2025-01-20","321 Kitchen St","Foodville","22222"
+"Homemade Cookies","Freshly baked chocolate chip cookies","bakery","good","sale","12.00","24","pieces","2024-08-16","555 Sweet Ave","Dessertland","33333"
