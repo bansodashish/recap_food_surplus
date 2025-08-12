@@ -6,7 +6,54 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001
 
 export class FoodItemsService {
   /**
-   * Create a new food item listing
+   * Get user's item count for subscription limit checking
+   */
+  async getUserItemCount(userId: string): Promise<number> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/food-items/user/${userId}/count`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
+
+      if (!response.ok) {
+        // Fallback: get all user items and count them
+        const items = await this.getUserFoodItems(userId);
+        return items.length;
+      }
+
+      const { count } = await response.json();
+      return count;
+    } catch (error) {
+      console.error('Error getting user item count:', error);
+      // Fallback to 0 if we can't determine count
+      return 0;
+    }
+  }
+
+  /**
+   * Check if user can add more items based on subscription limits
+   */
+  async canUserAddItems(userId: string, itemCount: number, maxItems: number): Promise<{ canAdd: boolean; currentCount: number; remainingItems: number }> {
+    try {
+      const currentCount = await this.getUserItemCount(userId);
+      const remainingItems = maxItems === -1 ? Number.MAX_SAFE_INTEGER : Math.max(0, maxItems - currentCount);
+      const canAdd = maxItems === -1 || currentCount + itemCount <= maxItems;
+
+      return {
+        canAdd,
+        currentCount,
+        remainingItems: maxItems === -1 ? Number.MAX_SAFE_INTEGER : remainingItems
+      };
+    } catch (error) {
+      console.error('Error checking user limits:', error);
+      return { canAdd: false, currentCount: 0, remainingItems: 0 };
+    }
+  }
+
+  /**
+   * Create a new food item listing with subscription limit checking
    */
   async createFoodItem(itemData: CreateFoodItemRequest, userId: string): Promise<FoodItem> {
     try {

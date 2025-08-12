@@ -29,6 +29,7 @@ interface AuthContextType {
   updateSubscription: (plan: SubscriptionPlan) => Promise<void>;
   updateProfile: (profileData: { name?: string; phone?: string; company?: string; address?: string; city?: string; country?: string }) => Promise<void>;
   canListItems: () => boolean;
+  getItemListingLimits: () => { maxItems: number; canUploadCSV: boolean; hasAPIAccess: boolean };
   canAccessFeature: (feature: string) => boolean;
 }
 
@@ -206,7 +207,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const canListItems = () => {
-    return user?.subscriptionPlan === 'premium' || user?.subscriptionPlan === 'enterprise';
+    // All users can list items, but free users have limits
+    return !!user;
+  };
+
+  const getItemListingLimits = () => {
+    if (!user) return { maxItems: 0, canUploadCSV: false, hasAPIAccess: false };
+    
+    const limits = {
+      free: { maxItems: 5, canUploadCSV: true, hasAPIAccess: false },
+      premium: { maxItems: 50, canUploadCSV: true, hasAPIAccess: true },
+      enterprise: { maxItems: -1, canUploadCSV: true, hasAPIAccess: true } // -1 means unlimited
+    };
+    
+    return limits[user.subscriptionPlan] || limits.free;
   };
 
   const canAccessFeature = (feature: string) => {
@@ -233,6 +247,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateSubscription,
     updateProfile,
     canListItems,
+    getItemListingLimits,
     canAccessFeature,
   };
 

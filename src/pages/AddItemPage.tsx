@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth';
 import { foodItemsService } from '../services/foodItems';
+import { CSVUploadModal } from '../components/CSVUploadModal';
+import { APIAccessPanel } from '../components/APIAccessPanel';
 import type { CreateFoodItemRequest, FoodCategory, ListingType, FoodCondition } from '../types/foodItem';
 import { FOOD_CATEGORIES, FOOD_CONDITIONS, QUANTITY_UNITS } from '../types/foodItem';
 
 const AddItemPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, getItemListingLimits } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [showCSVUpload, setShowCSVUpload] = useState(false);
+  const [uploadMethod, setUploadMethod] = useState<'manual' | 'csv' | 'api'>('manual');
+  
+  const limits = getItemListingLimits();
   
   const [formData, setFormData] = useState<CreateFoodItemRequest>({
     title: '',
@@ -50,8 +58,21 @@ const AddItemPage: React.FC = () => {
     },
   });
 
+  const handleCSVUploadComplete = (results: { success: number; failed: number; errors: string[] }) => {
+    setShowCSVUpload(false);
+    
+    if (results.success > 0) {
+      alert(`Successfully uploaded ${results.success} items!`);
+      navigate('/my-items');
+    }
+    
+    if (results.errors.length > 0) {
+      alert(`Upload completed with ${results.errors.length} errors:\n${results.errors.slice(0, 5).join('\n')}`);
+    }
+  };
+
   useEffect(() => {
-    // Check authentication and subscription
+    // Check authentication but allow free users to list items
     const checkAuth = async () => {
       try {
         const user = await authService.getCurrentUser();
@@ -60,13 +81,8 @@ const AddItemPage: React.FC = () => {
         return;
       }
 
-      const subscriptionPlan = user['custom:subscription_plan'];
-      
-      if (!subscriptionPlan || subscriptionPlan === 'free') {
-        alert('You need an active subscription to add items. Please upgrade your plan.');
-        navigate('/profile');
-        return;
-      }
+      // Remove subscription restriction - free users can now list items with limits
+      console.log('User authenticated:', user.email);
 
       // Pre-fill contact info from user profile
       setFormData(prev => ({
@@ -518,24 +534,115 @@ const AddItemPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-500">Step {currentStep} of 4</div>
-            <div className="text-sm text-gray-500">
-              {['Basic Info', 'Pricing', 'Photos', 'Location & Contact'][currentStep - 1]}
-            </div>
-          </div>
-          <div className="mt-2 bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-green-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(currentStep / 4) * 100}%` }}
-            />
+        {/* Upload Method Selector */}
+        <div className="mb-8 bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Food Items</h2>
+          <p className="text-gray-600 mb-4">
+            Your {limits.maxItems === -1 ? 'unlimited' : `${limits.maxItems} item`} limit for {user?.subscriptionPlan || 'free'} plan
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Manual Entry */}
+            <button
+              onClick={() => setUploadMethod('manual')}
+              className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                uploadMethod === 'manual' 
+                  ? 'border-teal-500 bg-teal-50' 
+                  : 'border-gray-200 hover:border-teal-200'
+              }`}
+            >
+              <div className="flex items-center mb-2">
+                <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <h3 className="font-medium">Manual Entry</h3>
+              </div>
+              <p className="text-sm text-gray-600">Add items one by one with full details</p>
+            </button>
+
+            {/* CSV Upload */}
+            <button
+              onClick={() => setUploadMethod('csv')}
+              className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                uploadMethod === 'csv' 
+                  ? 'border-teal-500 bg-teal-50' 
+                  : 'border-gray-200 hover:border-teal-200'
+              }`}
+            >
+              <div className="flex items-center mb-2">
+                <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 className="font-medium">CSV Upload</h3>
+              </div>
+              <p className="text-sm text-gray-600">Upload multiple items from spreadsheet</p>
+            </button>
+
+            {/* API Access */}
+            <button
+              onClick={() => setUploadMethod('api')}
+              disabled={!limits.hasAPIAccess}
+              className={`p-4 rounded-lg border-2 text-left transition-colors ${
+                uploadMethod === 'api' 
+                  ? 'border-teal-500 bg-teal-50' 
+                  : limits.hasAPIAccess
+                    ? 'border-gray-200 hover:border-teal-200'
+                    : 'border-gray-100 bg-gray-50 cursor-not-allowed'
+              }`}
+            >
+              <div className="flex items-center mb-2">
+                <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                <h3 className={`font-medium ${!limits.hasAPIAccess ? 'text-gray-400' : ''}`}>
+                  API Access {!limits.hasAPIAccess && '(Premium+)'}
+                </h3>
+              </div>
+              <p className={`text-sm ${!limits.hasAPIAccess ? 'text-gray-400' : 'text-gray-600'}`}>
+                Programmatic uploads via REST API
+              </p>
+            </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+        {/* Render based on selected method */}
+        {uploadMethod === 'csv' && (
+          <div className="mb-8">
+            <button
+              onClick={() => setShowCSVUpload(true)}
+              className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 font-medium"
+            >
+              Open CSV Upload
+            </button>
+          </div>
+        )}
+
+        {uploadMethod === 'api' && limits.hasAPIAccess && (
+          <div className="mb-8">
+            <APIAccessPanel />
+          </div>
+        )}
+
+        {uploadMethod === 'manual' && (
+          <>
+            {/* Progress Bar */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-gray-500">Step {currentStep} of 4</div>
+                <div className="text-sm text-gray-500">
+                  {['Basic Info', 'Pricing', 'Photos', 'Location & Contact'][currentStep - 1]}
+                </div>
+              </div>
+              <div className="mt-2 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / 4) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
           {currentStep === 1 && renderBasicInfo()}
           {currentStep === 2 && renderPricing()}
           {currentStep === 3 && renderImages()}
@@ -571,6 +678,16 @@ const AddItemPage: React.FC = () => {
             )}
           </div>
         </form>
+        </>
+        )}
+
+        {/* CSV Upload Modal */}
+        {showCSVUpload && (
+          <CSVUploadModal
+            onUploadComplete={handleCSVUploadComplete}
+            onClose={() => setShowCSVUpload(false)}
+          />
+        )}
       </div>
     </div>
   );
