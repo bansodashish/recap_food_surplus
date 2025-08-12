@@ -34,21 +34,14 @@ export const CSVUploadModal: React.FC<CSVUploadProps> = ({ onUploadComplete, onC
     try {
       const csvContent = await file.text();
       
-      // Use the CSV upload service with S3 integration for free users  
-      const uploadOptions = {
+      // Use traditional parameter-based call with all 4 parameters explicitly
+      const results = await csvUploadService.uploadFromCSV(
         csvContent,
-        maxItems: limits.maxItems === -1 ? 1000 : limits.maxItems,
-        onProgress: (current: number, total: number) => {
+        limits.maxItems === -1 ? 1000 : limits.maxItems,
+        (current: number, total: number) => {
           setProgress((current / total) * 100);
         },
-        userId: user?.id
-      };
-      
-      const results = await csvUploadService.uploadFromCSV(
-        uploadOptions.csvContent,
-        uploadOptions.maxItems,
-        uploadOptions.onProgress,
-        uploadOptions.userId
+        user?.id
       );
 
       onUploadComplete(results);
