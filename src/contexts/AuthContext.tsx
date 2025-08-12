@@ -124,17 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, name: string, profileData?: { phone?: string; company?: string; address?: string; city?: string; country?: string }) => {
     setIsLoading(true);
     try {
-      // Use AWS Cognito for user registration
+      // Use AWS Cognito for user registration - Basic version without custom attributes
       await authService.signUp({
         username: email,
         password,
         email,
         name,
         phone: profileData?.phone,
-        company: profileData?.company,
-        address: profileData?.address,
-        city: profileData?.city,
-        country: profileData?.country
+        address: profileData?.address
       });
       
       // After successful signup, the user needs to verify their email
