@@ -62,7 +62,10 @@ const AddItemPage: React.FC = () => {
     setShowCSVUpload(false);
     
     if (results.success > 0) {
-      alert(`Successfully uploaded ${results.success} items!`);
+      const message = user?.subscriptionPlan === 'free' 
+        ? `Successfully uploaded ${results.success} items to S3 storage! Your food items are now available to browse.`
+        : `Successfully uploaded ${results.success} items!`;
+      alert(message);
       navigate('/my-items');
     }
     

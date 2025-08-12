@@ -34,13 +34,21 @@ export const CSVUploadModal: React.FC<CSVUploadProps> = ({ onUploadComplete, onC
     try {
       const csvContent = await file.text();
       
-      // Use the CSV upload service
-      const results = await csvUploadService.uploadFromCSV(
+      // Use the CSV upload service with S3 integration for free users  
+      const uploadOptions = {
         csvContent,
-        limits.maxItems === -1 ? 1000 : limits.maxItems, // Set reasonable upper limit
-        (current: number, total: number) => {
+        maxItems: limits.maxItems === -1 ? 1000 : limits.maxItems,
+        onProgress: (current: number, total: number) => {
           setProgress((current / total) * 100);
-        }
+        },
+        userId: user?.id
+      };
+      
+      const results = await csvUploadService.uploadFromCSV(
+        uploadOptions.csvContent,
+        uploadOptions.maxItems,
+        uploadOptions.onProgress,
+        uploadOptions.userId
       );
 
       onUploadComplete(results);
@@ -88,8 +96,9 @@ export const CSVUploadModal: React.FC<CSVUploadProps> = ({ onUploadComplete, onC
           {/* Subscription Limits Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
             <p className="text-sm text-blue-800">
-              <strong>{user?.subscriptionPlan || 'Free'} Plan:</strong> Up to {limits.maxItems === -1 ? 'unlimited' : limits.maxItems} items
-              {limits.hasAPIAccess && ', API access available'}
+              <strong>{user?.subscriptionPlan || 'Free'} Plan:</strong> Upload up to {limits.maxItems === -1 ? 'unlimited' : limits.maxItems} items via CSV
+              {user?.subscriptionPlan === 'free' && <span className="block text-xs mt-1">✓ Includes S3 storage for food item data and images</span>}
+              {limits.hasAPIAccess && <span className="block text-xs mt-1">✓ API access available</span>}
             </p>
           </div>
 
