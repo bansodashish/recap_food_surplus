@@ -158,6 +158,16 @@ class AuthService {
     }
   }
 
+  // Get user attributes
+  async getUserAttributes() {
+    try {
+      return await fetchUserAttributes();
+    } catch (error) {
+      console.error('Error getting user attributes:', error);
+      throw error;
+    }
+  }
+
   // Check if user is authenticated
   async isAuthenticated(): Promise<boolean> {
     try {

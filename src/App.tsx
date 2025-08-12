@@ -15,6 +15,8 @@ import { ConfirmSignUpPage } from './pages/ConfirmSignUpPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
+import AddItemPage from './pages/AddItemPage';
+import MyItemsPage from './pages/MyItemsPage';
 import { Footer } from './components/Footer';
 
 function App() {
@@ -63,6 +65,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <PaymentSuccessPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/add-item" 
+                element={
+                  <ProtectedRoute requiresSubscription>
+                    <AddItemPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/my-items" 
+                element={
+                  <ProtectedRoute>
+                    <MyItemsPage />
                   </ProtectedRoute>
                 } 
               />

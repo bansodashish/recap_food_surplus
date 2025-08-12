@@ -10,6 +10,8 @@ const navigation = [
   { name: 'Request', href: '/request' },
   { name: 'Donate', href: '/donate' },
   { name: 'Sell', href: '/sell' },
+  { name: 'My Items', href: '/my-items', authRequired: true },
+  { name: 'Add Item', href: '/add-item', authRequired: true },
   { name: 'About', href: '/about' },
   { name: 'Sustainability', href: '/sustainability' },
 ];
@@ -38,20 +40,22 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:ml-6 md:flex md:items-center md:space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'px-3 py-2 text-sm font-medium transition-colors duration-200',
-                  location.pathname === item.href
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-700 hover:text-primary-600 hover:border-b-2 hover:border-primary-300'
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navigation
+              .filter(item => !item.authRequired || user)
+              .map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'px-3 py-2 text-sm font-medium transition-colors duration-200',
+                    location.pathname === item.href
+                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      : 'text-gray-700 hover:text-primary-600 hover:border-b-2 hover:border-primary-300'
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
             
             <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
               <button className="p-2 text-gray-400 hover:text-gray-500">
@@ -119,21 +123,23 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200',
-                  location.pathname === item.href
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                )}
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navigation
+              .filter(item => !item.authRequired || user)
+              .map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200',
+                    location.pathname === item.href
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  )}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
             <div className="border-t border-gray-200 pt-4">
               {user ? (
                 <div className="space-y-2">
