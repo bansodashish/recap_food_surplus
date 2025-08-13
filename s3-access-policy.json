@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowS3UploadForAuthenticatedUsers",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:GetObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::bansoash-poc/food-items/${cognito-identity.amazonaws.com:sub}/*",
+        "arn:aws:s3:::bansoash-poc/user-uploads/${cognito-identity.amazonaws.com:sub}/*"
+      ]
+    },
+    {
+      "Sid": "AllowListBucketForUserPrefix",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::bansoash-poc",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "food-items/${cognito-identity.amazonaws.com:sub}/*",
+            "user-uploads/${cognito-identity.amazonaws.com:sub}/*"
+          ]
+        }
+      }
+    }
+  ]
+}

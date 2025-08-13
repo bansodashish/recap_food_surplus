@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AuthDebugComponent from '../components/AuthDebugComponent';
 
 export function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | React.ReactNode>('');
+  const [showDebug, setShowDebug] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -265,8 +267,23 @@ export function LoginPage() {
               <a href="#" className="text-primary-600 hover:text-primary-700">Privacy Policy</a>
             </p>
           )}
+          
+          {/* Debug Button - Only show in development */}
+          {import.meta.env.DEV && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setShowDebug(true)}
+                className="text-xs text-gray-500 hover:text-gray-700 underline"
+              >
+                🔍 Debug Authentication Issues
+              </button>
+            </div>
+          )}
         </div>
       </div>
+      
+      {/* Debug Modal */}
+      {showDebug && <AuthDebugComponent onClose={() => setShowDebug(false)} />}
     </div>
   );
 }

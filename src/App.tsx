@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import BulletproofErrorBoundary from './components/BulletproofErrorBoundary';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
 import { BrowsePage } from './pages/BrowsePage';
@@ -10,6 +11,7 @@ import { SellPage } from './pages/SellPage';
 import { AboutPage } from './pages/AboutPage';
 import { SustainabilityPage } from './pages/SustainabilityPage';
 import { LoginPage } from './pages/LoginPage';
+import BulletproofLoginPage from './pages/BulletproofLoginPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { ConfirmSignUpPage } from './pages/ConfirmSignUpPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -18,13 +20,15 @@ import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
 import MyItemsPage from './pages/MyItemsPage';
 import { Footer } from './components/Footer';
+import S3DiagnosticPanel from './components/S3DiagnosticPanel';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen flex flex-col bg-gray-50">
-          <Navbar />
+    <BulletproofErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen flex flex-col bg-gray-50">
+            <Navbar />
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -48,7 +52,8 @@ function App() {
               />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/sustainability" element={<SustainabilityPage />} />
-              <Route path="/login" element={<LoginPage />} />
+              <Route path="/login" element={<BulletproofLoginPage />} />
+              <Route path="/login-old" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
               <Route 
@@ -87,9 +92,11 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <S3DiagnosticPanel />
         </div>
       </Router>
     </AuthProvider>
+    </BulletproofErrorBoundary>
   );
 }
 

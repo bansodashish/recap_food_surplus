@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/auth';
 import { foodItemsService } from '../services/foodItems';
-import { CSVUploadModal } from '../components/CSVUploadModal';
 import { CSVUploadModalWithPhotos } from '../components/CSVUploadModalWithPhotos';
 import { APIAccessPanel } from '../components/APIAccessPanel';
 import type { CreateFoodItemRequest, FoodCategory, ListingType, FoodCondition } from '../types/foodItem';
@@ -15,9 +14,8 @@ const AddItemPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [showCSVUpload, setShowCSVUpload] = useState(false);
   const [showCSVPhotosUpload, setShowCSVPhotosUpload] = useState(false);
-  const [uploadMethod, setUploadMethod] = useState<'manual' | 'csv' | 'csv-photos' | 'api'>('manual');
+  const [uploadMethod, setUploadMethod] = useState<'manual' | 'csv-photos' | 'api'>('manual');
   
   const limits = getItemListingLimits();
   
@@ -60,13 +58,13 @@ const AddItemPage: React.FC = () => {
     },
   });
 
-  const handleCSVUploadComplete = (results: { success: number; failed: number; errors: string[] }) => {
-    setShowCSVUpload(false);
+  const handleCSVPhotosUploadComplete = (results: { success: number; failed: number; errors: string[] }) => {
+    setShowCSVPhotosUpload(false);
     
     if (results.success > 0) {
       const message = user?.subscriptionPlan === 'free' 
-        ? `Successfully uploaded ${results.success} items to S3 storage! Your food items are now available to browse.`
-        : `Successfully uploaded ${results.success} items!`;
+        ? `Successfully uploaded ${results.success} items with photos to S3 storage! Your food items are now available to browse.`
+        : `Successfully uploaded ${results.success} items with photos!`;
       alert(message);
       navigate('/my-items');
     }
@@ -565,24 +563,6 @@ const AddItemPage: React.FC = () => {
               <p className="text-sm text-gray-600">Add items one by one with full details</p>
             </button>
 
-            {/* CSV Upload */}
-            <button
-              onClick={() => setUploadMethod('csv')}
-              className={`p-4 rounded-lg border-2 text-left transition-colors ${
-                uploadMethod === 'csv' 
-                  ? 'border-teal-500 bg-teal-50' 
-                  : 'border-gray-200 hover:border-teal-200'
-              }`}
-            >
-              <div className="flex items-center mb-2">
-                <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h3 className="font-medium">CSV Upload</h3>
-              </div>
-              <p className="text-sm text-gray-600">Upload multiple items from spreadsheet</p>
-            </button>
-
             {/* CSV Upload with Photos */}
             <button
               onClick={() => setUploadMethod('csv-photos')}
@@ -630,17 +610,6 @@ const AddItemPage: React.FC = () => {
         </div>
 
         {/* Render based on selected method */}
-        {uploadMethod === 'csv' && (
-          <div className="mb-8">
-            <button
-              onClick={() => setShowCSVUpload(true)}
-              className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 font-medium"
-            >
-              Open CSV Upload
-            </button>
-          </div>
-        )}
-
         {uploadMethod === 'csv-photos' && (
           <div className="mb-8">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -648,10 +617,10 @@ const AddItemPage: React.FC = () => {
                 <svg className="w-5 h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h4 className="font-medium text-green-800">Enhanced CSV Upload with Photo Support</h4>
+                <h4 className="font-medium text-green-800">CSV Upload with Photo Support</h4>
               </div>
               <p className="text-sm text-green-700">
-                Upload your CSV file and then add up to 5 photos per item with bulletproof S3 storage reliability.
+                Upload your CSV file and add up to 5 photos per item with bulletproof S3 storage reliability.
                 Perfect for showcasing your food items with visual appeal!
               </p>
             </div>
@@ -733,18 +702,10 @@ const AddItemPage: React.FC = () => {
         </>
         )}
 
-        {/* CSV Upload Modal */}
-        {showCSVUpload && (
-          <CSVUploadModal
-            onUploadComplete={handleCSVUploadComplete}
-            onClose={() => setShowCSVUpload(false)}
-          />
-        )}
-
         {/* CSV Upload with Photos Modal */}
         {showCSVPhotosUpload && (
           <CSVUploadModalWithPhotos
-            onUploadComplete={handleCSVUploadComplete}
+            onUploadComplete={handleCSVPhotosUploadComplete}
             onClose={() => setShowCSVPhotosUpload(false)}
           />
         )}

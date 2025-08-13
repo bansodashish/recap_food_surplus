@@ -1,1 +1,41 @@
 node_modules
+
+# Environment files with sensitive data
+.env.local
+.env.production
+.env.production.local
+.env.*.local
+
+# AWS Configuration files (security critical)
+aws-exports.js
+aws-exports.ts
+**/aws-exports.*
+amplifyconfiguration.json
+amplifyconfiguration.dart
+
+# Security: Never commit files with actual AWS credentials
+**/aws-credentials*
+**/secrets*
+**/*-credentials*
+**/*.pem
+**/*.key
+
+# Build outputs
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+node_modules

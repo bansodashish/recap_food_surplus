@@ -1,5 +1,5 @@
 import type { FoodItem, CreateFoodItemRequest, FoodItemFilters } from '../types/foodItem';
-import { s3Service } from './s3';
+import { secureS3Service as s3Service } from './bulletproofS3Service';
 import { localStorageService } from './localStorage';
 
 // Mock API base URL - replace with your actual API endpoint

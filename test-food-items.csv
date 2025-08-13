@@ -1,0 +1,6 @@
+name,description,category,quantity,unit,condition,expiryDate,allergens,dietaryInfo,pickupLocation,availableFrom,availableUntil,listingType,price
+"Organic Apples","Fresh organic apples from local farm","fruits",5,"kg","excellent","2024-12-31","","organic","Downtown Market","2024-01-01","2024-12-30","donation",0
+"Day-old Bread","Fresh bread from yesterday","bakery",2,"pieces","good","2024-01-20","gluten","","Bakery Store","2024-01-01","2024-01-19","sale",2
+"Fresh Spinach","Organic fresh spinach leaves","vegetables",1,"kg","excellent","2024-01-25","","organic;vegetarian","Farmers Market","2024-01-01","2024-01-24","donation",0
+"Canned Tomatoes","Unopened canned tomatoes","pantry",3,"pieces","excellent","2025-12-31","","","Home Kitchen","2024-01-01","2024-12-31","sale",5
+"Homemade Cookies","Chocolate chip cookies made today","prepared-food",12,"pieces","excellent","2024-01-18","eggs;gluten","","Home Kitchen","2024-01-01","2024-01-17","donation",0
