@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle, Leaf } from 'lucide-react';
 import { bulletproofAuth } from '../services/bulletproofAuth';
 
 interface FormData {
@@ -30,6 +30,13 @@ export function BulletproofLoginPage() {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  // Debug logging to confirm which login page is loading
+  useEffect(() => {
+    console.log('🛡️ BulletproofLoginPage loaded successfully');
+    console.log('Current auth state:', authState);
+    console.log('Form has sign-up capability:', true);
+  }, [authState]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -40,6 +47,28 @@ export function BulletproofLoginPage() {
   const showMessage = (type: 'error' | 'success' | 'info', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
+  };
+
+  const getMessageStyles = (type: string) => {
+    switch (type) {
+      case 'error':
+        return 'bg-red-50 text-red-800 border border-red-200';
+      case 'success':
+        return 'bg-green-50 text-green-800 border border-green-200';
+      default:
+        return 'bg-blue-50 text-blue-800 border border-blue-200';
+    }
+  };
+
+  const getMessageIcon = (type: string) => {
+    switch (type) {
+      case 'error':
+        return <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />;
+      case 'success':
+        return <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" />;
+      default:
+        return <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />;
+    }
   };
 
   const handleSignIn = async () => {
@@ -380,10 +409,28 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
 
             <button
               onClick={() => setAuthState('signup')}
-              className="w-full text-teal-600 hover:text-teal-700 text-sm"
+              className="w-full mt-4 bg-gray-50 text-teal-600 py-3 px-4 rounded-md border border-teal-200 hover:bg-teal-50 hover:border-teal-300 transition-colors font-medium flex items-center justify-center"
             >
+              <User className="mr-2 h-4 w-4" />
               Don't have an account? Create one here
             </button>
+
+            {/* Additional prominent sign-up section */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-sm text-gray-600 mb-3">
+                  New to FoodSurplus? Join our mission to reduce food waste!
+                </p>
+                <button
+                  onClick={() => setAuthState('signup')}
+                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-colors"
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Start Creating Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </div>
         );
     }
@@ -392,18 +439,29 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        
+        {/* Clear indicator that this is the bulletproof version */}
+        <div className="text-center mb-6">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-teal-100">
+            <Leaf className="h-6 w-6 text-teal-600" />
+          </div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            FoodSurplus
+          </h2>
+          <div className="mt-2 text-center text-sm text-teal-600 font-medium">
+            🛡️ Bulletproof Authentication System
+          </div>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Reduce food waste • Connect communities
+          </p>
+        </div>
+
         <div className="bg-white py-8 px-4 shadow-sm rounded-lg sm:px-10">
           
           {/* Message Display */}
           {message && (
-            <div className={`mb-4 p-3 rounded-md flex items-center ${
-              message.type === 'error' ? 'bg-red-50 text-red-800 border border-red-200' :
-              message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' :
-              'bg-blue-50 text-blue-800 border border-blue-200'
-            }`}>
-              {message.type === 'error' ? <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" /> :
-               message.type === 'success' ? <CheckCircle className="w-4 h-4 mr-2 flex-shrink-0" /> :
-               <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />}
+            <div className={`mb-4 p-3 rounded-md flex items-center ${getMessageStyles(message.type)}`}>
+              {getMessageIcon(message.type)}
               <div className="text-sm whitespace-pre-line">{message.text}</div>
             </div>
           )}
