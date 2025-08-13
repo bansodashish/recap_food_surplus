@@ -11,7 +11,7 @@ interface FormData {
   confirmationCode: string;
 }
 
-type AuthState = 'signin' | 'signup' | 'confirm' | 'processing';
+type AuthState = 'signin' | 'confirm' | 'processing';
 
 export function BulletproofLoginPage() {
   const [authState, setAuthState] = useState<AuthState>('signin');
@@ -19,8 +19,8 @@ export function BulletproofLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'error' | 'success' | 'info'; text: string } | null>(null);
   const [formData, setFormData] = useState<FormData>({
-    email: 'bansod.ashish@gmail.com', // Pre-filled for testing
-    password: 'anty12345', // Pre-filled for testing
+    email: '', 
+    password: '', 
     name: '',
     confirmPassword: '',
     confirmationCode: ''
@@ -89,40 +89,6 @@ export function BulletproofLoginPage() {
       }
     } catch (error: any) {
       showMessage('error', `Sign in failed: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignUp = async () => {
-    if (formData.password !== formData.confirmPassword) {
-      showMessage('error', 'Passwords do not match');
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage(null);
-
-    try {
-      const result = await bulletproofAuth.bulletproofSignUp(
-        formData.email, 
-        formData.password, 
-        formData.name || 'User'
-      );
-      
-      if (result.success) {
-        if (result.nextStep?.signUpStep === 'CONFIRM_SIGN_UP') {
-          showMessage('success', `Account created successfully! Please check your email for confirmation code. (Strategy: ${result.strategy})`);
-          setAuthState('confirm');
-        } else {
-          showMessage('success', `Account created and ready! (Strategy: ${result.strategy})`);
-          setTimeout(() => navigate(from, { replace: true }), 1000);
-        }
-      } else {
-        showMessage('error', result.error || 'Account creation failed');
-      }
-    } catch (error: any) {
-      showMessage('error', `Account creation failed: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -242,108 +208,6 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
           </div>
         );
 
-      case 'signup':
-        return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Create Account</h3>
-            
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                <User className="inline w-4 h-4 mr-1" />
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Enter your name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                <Mail className="inline w-4 h-4 mr-1" />
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                <Lock className="inline w-4 h-4 mr-1" />
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md"
-                  placeholder="Create password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                <Lock className="inline w-4 h-4 mr-1" />
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                placeholder="Confirm password"
-                required
-              />
-            </div>
-
-            <button
-              onClick={handleSignUp}
-              disabled={isLoading}
-              className="w-full bg-teal-600 text-white py-2 px-4 rounded-md hover:bg-teal-700 disabled:opacity-50 flex items-center justify-center"
-            >
-              {isLoading ? '⏳ Creating Account...' : (
-                <>
-                  Create Account <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setAuthState('signin')}
-              className="w-full text-teal-600 hover:text-teal-700 text-sm"
-            >
-              Already have an account? Sign in here
-            </button>
-          </div>
-        );
-
       default: // signin
         return (
           <div className="space-y-4">
@@ -408,11 +272,11 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
             </button>
 
             <button
-              onClick={() => setAuthState('signup')}
+              onClick={() => navigate('/signup')}
               className="w-full mt-4 bg-gray-50 text-teal-600 py-3 px-4 rounded-md border border-teal-200 hover:bg-teal-50 hover:border-teal-300 transition-colors font-medium flex items-center justify-center"
             >
               <User className="mr-2 h-4 w-4" />
-              Don't have an account? Create one here
+              Don't have an account? Sign up here
             </button>
 
             {/* Additional prominent sign-up section */}
@@ -422,7 +286,7 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
                   New to FoodSurplus? Join our mission to reduce food waste!
                 </p>
                 <button
-                  onClick={() => setAuthState('signup')}
+                  onClick={() => navigate('/signup')}
                   className="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-colors"
                 >
                   <User className="mr-2 h-4 w-4" />
@@ -440,7 +304,7 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         
-        {/* Clear indicator that this is the bulletproof version */}
+        {/* Header */}
         <div className="text-center mb-6">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-teal-100">
             <Leaf className="h-6 w-6 text-teal-600" />
@@ -448,9 +312,6 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             FoodSurplus
           </h2>
-          <div className="mt-2 text-center text-sm text-teal-600 font-medium">
-            🛡️ Bulletproof Authentication System
-          </div>
           <p className="mt-2 text-center text-sm text-gray-600">
             Reduce food waste • Connect communities
           </p>
@@ -480,9 +341,6 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
                 >
                   🔍 Run Comprehensive Diagnostic
                 </button>
-              </div>
-              <div className="mt-2 text-xs text-gray-400 text-center">
-                Bulletproof Authentication System - 0.001% Failure Rate
               </div>
             </div>
           )}

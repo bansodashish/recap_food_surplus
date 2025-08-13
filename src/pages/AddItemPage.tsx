@@ -620,7 +620,7 @@ const AddItemPage: React.FC = () => {
                 <h4 className="font-medium text-green-800">CSV Upload with Photo Support</h4>
               </div>
               <p className="text-sm text-green-700">
-                Upload your CSV file and add up to 5 photos per item with bulletproof S3 storage reliability.
+                Upload your CSV file and add up to 5 photos per item with secure S3 storage.
                 Perfect for showcasing your food items with visual appeal!
               </p>
             </div>

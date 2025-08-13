@@ -393,7 +393,7 @@ export const CSVUploadModalWithPhotos: React.FC<CSVUploadProps> = ({ onUploadCom
           <p className="text-sm text-blue-800">
             <strong>{user?.subscriptionPlan || 'Free'} Plan:</strong> Upload up to {limits.maxItems === -1 ? 'unlimited' : limits.maxItems} items via CSV
             <span className="block text-xs mt-1">✅ Includes S3 storage for food item data and images (up to 5 photos per item)</span>
-            <span className="block text-xs">✅ Bulletproof reliability with localStorage fallback and retry logic</span>
+            <span className="block text-xs">✅ Reliable upload with localStorage fallback and retry logic</span>
             <span className="block text-xs">⚡ AWS S3 integration with exponential backoff retry (0.001% failure rate)</span>
           </p>
         </div>
@@ -403,7 +403,7 @@ export const CSVUploadModalWithPhotos: React.FC<CSVUploadProps> = ({ onUploadCom
           <p className="text-sm text-green-800">
             <strong>� Secure Setup (No Exposed Credentials!):</strong>
             <span className="block text-xs mt-1">✅ Uses Cognito Identity Pool for temporary S3 credentials</span>
-            <span className="block text-xs">✅ Zero hardcoded AWS keys - bulletproof security</span>
+            <span className="block text-xs">✅ Zero hardcoded AWS keys - secure authentication</span>
             <span className="block text-xs">✅ User isolation - you can only access your own files</span>
             <span className="block text-xs">⚡ Production-ready with 0.001% failure rate</span>
           </p>
@@ -580,7 +580,7 @@ export const CSVUploadModalWithPhotos: React.FC<CSVUploadProps> = ({ onUploadCom
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
               <p className="text-sm text-blue-800">
-                Uploading your items with photos to S3 storage with bulletproof reliability...
+                Uploading your items with photos to S3 storage with reliable processing...
               </p>
             </div>
 
