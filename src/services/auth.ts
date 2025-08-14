@@ -75,18 +75,6 @@ class AuthService {
   // Sign up a new user - Basic version without custom attributes
   async signUp({ username, password, email, name, phone, address }: BasicSignUpParams) {
     try {
-      console.log('🔄 AuthService: Starting signup process...');
-      console.log('🔍 Debug Info:', {
-        username,
-        email,
-        name,
-        passwordLength: password.length,
-        hasUppercase: /[A-Z]/.test(password),
-        hasLowercase: /[a-z]/.test(password),
-        hasNumbers: /\d/.test(password),
-        hasSpecialChars: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-      });
-      
       const userAttributes: Record<string, string> = {
         email,
       };
@@ -96,9 +84,6 @@ class AuthService {
       if (phone) userAttributes.phone_number = phone;
       if (address) userAttributes.address = address;
 
-      console.log('📝 User attributes being sent:', userAttributes);
-      console.log('🔧 Making AWS Amplify signUp call...');
-
       const result = await signUp({
         username,
         password,
@@ -107,103 +92,55 @@ class AuthService {
         },
       });
       
-      console.log('✅ Signup successful:', { 
-        userId: result.userId, 
-        nextStep: result.nextStep 
-      });
-      
       return result;
     } catch (error: any) {
-      console.error('❌ Detailed signup error:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        statusCode: error.$metadata?.httpStatusCode,
-        requestId: error.$metadata?.requestId,
-        awsErrorCode: error.__type,
-        errorType: error.$fault,
-        stack: error.stack,
-        fullError: error
-      });
+      console.error('Signup error:', error.name, error.message);
 
-      // Check for specific AWS error patterns
+      // Provide user-friendly error messages
       let userFriendlyMessage = 'Failed to create account';
-      let technicalReason = '';
       
       switch (error.name) {
         case 'UsernameExistsException':
           userFriendlyMessage = 'An account with this email already exists. Please use a different email or try signing in.';
-          technicalReason = 'User already exists in Cognito User Pool';
           break;
-          
         case 'InvalidPasswordException':
           userFriendlyMessage = 'Password must be at least 8 characters and include uppercase, lowercase, and numbers.';
-          technicalReason = 'Password does not meet Cognito User Pool policy requirements';
           break;
-          
         case 'InvalidParameterException':
           if (error.message?.includes('email')) {
             userFriendlyMessage = 'Please enter a valid email address.';
-            technicalReason = 'Invalid email format provided to Cognito';
           } else {
             userFriendlyMessage = 'Please check that all required fields are filled correctly.';
-            technicalReason = 'Invalid parameter provided to Cognito signUp';
           }
           break;
-          
         case 'TooManyRequestsException':
           userFriendlyMessage = 'Too many attempts. Please wait a few minutes before trying again.';
-          technicalReason = 'Rate limit exceeded for Cognito User Pool';
           break;
-          
         case 'CodeDeliveryFailureException':
           userFriendlyMessage = 'Unable to send confirmation email. Please check your email address and try again.';
-          technicalReason = 'Cognito failed to deliver verification email';
           break;
-          
         case 'LimitExceededException':
           userFriendlyMessage = 'Account creation limit exceeded. Please contact support if this continues.';
-          technicalReason = 'Cognito User Pool limits exceeded';
           break;
-          
         case 'NotAuthorizedException':
-          userFriendlyMessage = 'Not authorized to create account. Please contact support.';
-          technicalReason = 'Cognito User Pool client not authorized for signup';
-          break;
-          
-        case 'ResourceNotFoundException':
           userFriendlyMessage = 'Authentication service configuration error. Please contact support.';
-          technicalReason = 'Cognito User Pool or Client ID not found';
           break;
-          
+        case 'ResourceNotFoundException':
+          userFriendlyMessage = 'Authentication service temporarily unavailable. Please try again in a few minutes.';
+          break;
         default:
           if (error.message?.includes('Network Error') || error.message?.includes('fetch')) {
             userFriendlyMessage = 'Network connection error. Please check your internet connection and try again.';
-            technicalReason = 'Network connectivity issue to AWS Cognito';
           } else if (error.message?.includes('User Pool') || error.message?.includes('Client')) {
             userFriendlyMessage = 'Authentication service temporarily unavailable. Please try again in a few minutes.';
-            technicalReason = 'AWS Cognito service or configuration issue';
-          } else if (error.code === 'UserPoolNotFound') {
-            userFriendlyMessage = 'Authentication service configuration error. Please contact support.';
-            technicalReason = 'Cognito User Pool not found - check User Pool ID';
-          } else if (error.code === 'UserPoolClientNotFound') {
-            userFriendlyMessage = 'Authentication service configuration error. Please contact support.';
-            technicalReason = 'Cognito User Pool Client not found - check Client ID';
           }
       }
-
-      console.error('🔍 Error Analysis:', {
-        userFriendlyMessage,
-        technicalReason,
-        shouldContactSupport: ['ResourceNotFoundException', 'NotAuthorizedException'].includes(error.name)
-      });
 
       // Create a new error with the user-friendly message but preserve original error details
       const enhancedError = new Error(userFriendlyMessage);
       (enhancedError as any).originalError = error;
       (enhancedError as any).name = error.name;
       (enhancedError as any).code = error.code;
-      (enhancedError as any).technicalReason = technicalReason;
       
       throw enhancedError;
     }

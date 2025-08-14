@@ -21,9 +21,6 @@ import AddItemPage from './pages/AddItemPage';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
-import S3DiagnosticPanel from './components/S3DiagnosticPanel';
-import AuthDebugPanel from './components/AuthDebugPanel';
-import CognitoDebugComponent from './components/CognitoDebugComponent';
 
 function App() {
   return (
@@ -96,9 +93,6 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          <S3DiagnosticPanel />
-          <AuthDebugPanel />
-          <CognitoDebugComponent />
         </div>
       </Router>
     </AuthProvider>
