@@ -541,7 +541,7 @@ const AddItemPage: React.FC = () => {
         <div className="mb-8 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Add Food Items</h2>
           <p className="text-gray-500 mb-6">
-            Your {limits.maxItems === -1 ? 'unlimited' : `${limits.maxItems} item`} limit for {user?.subscriptionPlan || 'free'} plan
+            Your {limits.maxItems === -1 ? 'unlimited' : `${limits.maxItems} item`} limit for {user?.subscriptionPlan || 'free'} plan {user?.subscriptionPlan === 'free' ? '(CSV upload temporarily enabled for testing)' : ''}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -593,7 +593,7 @@ const AddItemPage: React.FC = () => {
               <p className={`text-sm ${!limits.canUploadCSV ? 'text-gray-400' : 'text-gray-600'}`}>
                 {!limits.canUploadCSV 
                   ? 'Bulk CSV upload with photo storage requires Premium plan or above'
-                  : 'Upload items with photos (up to 5 per item)'
+                  : 'Upload items with photos (up to 5 per item) - Available for testing!'
                 }
               </p>
               {!limits.canUploadCSV && (

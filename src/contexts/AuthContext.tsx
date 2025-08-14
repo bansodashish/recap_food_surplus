@@ -339,7 +339,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return { maxItems: 0, canUploadCSV: false, hasAPIAccess: false };
     
     const limits = {
-      free: { maxItems: 5, canUploadCSV: false, hasAPIAccess: false },
+      free: { maxItems: 5, canUploadCSV: true, hasAPIAccess: false }, // Temporarily enabled for testing
       premium: { maxItems: -1, canUploadCSV: true, hasAPIAccess: false }, // -1 means unlimited
       enterprise: { maxItems: -1, canUploadCSV: true, hasAPIAccess: true } // -1 means unlimited
     }[user.subscriptionPlan || 'free'];
