@@ -19,6 +19,7 @@ import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
 import AWSInfrastructureDiagnostic from './components/AWSInfrastructureDiagnostic';
+import { PostLoginDashboard } from './pages/PostLoginDashboard';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
@@ -58,6 +59,14 @@ function App() {
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
               <Route path="/cognito-test" element={<CognitoTestPage />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <PostLoginDashboard />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/profile" 
                 element={

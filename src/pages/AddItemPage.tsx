@@ -583,29 +583,43 @@ const AddItemPage: React.FC = () => {
             </button>
 
             {/* API Access */}
-            <button
-              onClick={() => setUploadMethod('api')}
-              disabled={!limits.hasAPIAccess}
-              className={`p-4 rounded-lg border-2 text-left transition-colors ${
-                uploadMethod === 'api' 
+            <div className={`p-4 rounded-lg border-2 text-left transition-colors ${
+              !limits.hasAPIAccess
+                ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                : uploadMethod === 'api' 
                   ? 'border-teal-500 bg-teal-50' 
-                  : limits.hasAPIAccess
-                    ? 'border-gray-200 hover:border-teal-200'
-                    : 'border-gray-100 bg-gray-50 cursor-not-allowed'
-              }`}
-            >
-              <div className="flex items-center mb-2">
-                <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                <h3 className={`font-medium ${!limits.hasAPIAccess ? 'text-gray-400' : ''}`}>
-                  API Access {!limits.hasAPIAccess && '(Premium+)'}
-                </h3>
+                  : 'border-gray-200 hover:border-teal-200 cursor-pointer'
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  <h3 className={`font-medium ${!limits.hasAPIAccess ? 'text-gray-400' : ''}`}>
+                    API Access
+                  </h3>
+                </div>
+                {!limits.hasAPIAccess && (
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
+                    Enterprise Only
+                  </span>
+                )}
               </div>
               <p className={`text-sm ${!limits.hasAPIAccess ? 'text-gray-400' : 'text-gray-600'}`}>
-                Programmatic uploads via REST API
+                {!limits.hasAPIAccess 
+                  ? 'Programmatic API access requires Enterprise plan'
+                  : 'Programmatic uploads via REST API - perfect for system integrations'
+                }
               </p>
-            </button>
+              {!limits.hasAPIAccess && (
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Upgrade to Enterprise →
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

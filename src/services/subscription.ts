@@ -58,6 +58,20 @@ class SubscriptionService {
     }
 
     try {
+      // For demo purposes, we'll simulate the payment flow
+      // In production, replace this with actual Stripe integration
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        // Simulate successful payment for demo
+        console.log('Demo mode: Simulating successful payment');
+        
+        // Update user subscription in Cognito
+        await authService.updateSubscriptionPlan(planId);
+        
+        // Redirect to success page
+        window.location.href = `${window.location.origin}/subscription/success?plan=${planId}&cycle=${billingCycle}`;
+        return;
+      }
+
       const response = await fetch(`${this.apiBaseUrl}/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -69,10 +83,14 @@ class SubscriptionService {
           userId,
           planId,
           billingCycle,
-          successUrl: `${window.location.origin}/subscription/success`,
+          successUrl: `${window.location.origin}/subscription/success?plan=${planId}&cycle=${billingCycle}`,
           cancelUrl: `${window.location.origin}/subscription`,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
 
       const { sessionId } = await response.json();
       
