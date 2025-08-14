@@ -19,7 +19,6 @@ import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
 import AWSInfrastructureDiagnostic from './components/AWSInfrastructureDiagnostic';
-import InfrastructureDiagnostic from './components/InfrastructureDiagnostic';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
@@ -95,8 +94,6 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          {/* Infrastructure diagnostic for troubleshooting configuration changes */}
-          <InfrastructureDiagnostic />
           {/* Infrastructure diagnostic for troubleshooting */}
           <AWSInfrastructureDiagnostic />
         </div>
