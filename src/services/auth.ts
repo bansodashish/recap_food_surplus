@@ -262,31 +262,77 @@ class AuthService {
   // Get current authenticated user
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      const user = await getCurrentUser();
-      const attributes = await fetchUserAttributes();
+      // Add retry logic for getCurrentUser
+      let attempts = 0;
+      const maxAttempts = 3;
       
-      const authUser: AuthUser = {
-        username: user.username,
-        email: attributes.email || '',
-        email_verified: attributes.email_verified === 'true',
-        sub: attributes.sub || '',
-        name: attributes.name,
-        given_name: attributes.given_name,
-        family_name: attributes.family_name,
-        phone_number: attributes.phone_number,
-        address: attributes.address,
-        'custom:subscription_plan': (attributes['custom:subscription_plan'] as 'free' | 'premium' | 'enterprise') || 'free',
-        'custom:subscription_status': (attributes['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
-        'custom:subscription_expires': attributes['custom:subscription_expires'],
-        'custom:stripe_customer_id': attributes['custom:stripe_customer_id'],
-        'custom:company': attributes['custom:company'],
-        'custom:city': attributes['custom:city'],
-        'custom:country': attributes['custom:country']
-      };
+      while (attempts < maxAttempts) {
+        try {
+          const user = await getCurrentUser();
+          const attributes = await fetchUserAttributes();
+          
+          // Validate that we have essential user data
+          if (!user.username || !attributes.email) {
+            throw new Error('Essential user data missing');
+          }
+          
+          const authUser: AuthUser = {
+            username: user.username,
+            email: attributes.email || '',
+            email_verified: attributes.email_verified === 'true',
+            sub: attributes.sub || '',
+            name: attributes.name || attributes.given_name || attributes.email.split('@')[0],
+            given_name: attributes.given_name,
+            family_name: attributes.family_name,
+            phone_number: attributes.phone_number,
+            address: attributes.address,
+            'custom:subscription_plan': (attributes['custom:subscription_plan'] as 'free' | 'premium' | 'enterprise') || 'free',
+            'custom:subscription_status': (attributes['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+            'custom:subscription_expires': attributes['custom:subscription_expires'],
+            'custom:stripe_customer_id': attributes['custom:stripe_customer_id'],
+            'custom:company': attributes['custom:company'],
+            'custom:city': attributes['custom:city'],
+            'custom:country': attributes['custom:country']
+          };
+          
+          console.log('✅ Successfully retrieved user data:', authUser);
+          return authUser;
+        } catch (attemptError) {
+          attempts++;
+          console.warn(`Attempt ${attempts} failed to get user data:`, attemptError);
+          
+          if (attempts < maxAttempts) {
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          } else {
+            throw attemptError;
+          }
+        }
+      }
       
-      return authUser;
+      return null;
     } catch (error) {
-      console.error('Error getting current user:', error);
+      console.error('Error getting current user after all attempts:', error);
+      
+      // If we can't get user data but there's a session, return minimal user data
+      try {
+        const user = await getCurrentUser();
+        if (user?.username) {
+          console.log('⚠️ Returning minimal user data as fallback');
+          return {
+            username: user.username,
+            email: user.username, // Use username as email fallback
+            email_verified: false,
+            sub: user.userId || 'unknown',
+            name: user.username.split('@')[0],
+            'custom:subscription_plan': 'free',
+            'custom:subscription_status': 'active'
+          };
+        }
+      } catch (fallbackError) {
+        console.error('Fallback user retrieval also failed:', fallbackError);
+      }
+      
       return null;
     }
   }

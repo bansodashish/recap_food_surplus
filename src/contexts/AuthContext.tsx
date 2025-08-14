@@ -90,11 +90,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Use AWS Cognito for authentication
-      await authService.signIn({ username: email, password });
+      console.log('🔐 Starting sign in process...');
       
-      // Get the authenticated user data
-      const cognitoUser = await authService.getCurrentUser();
+      // Step 1: Use AWS Cognito for authentication
+      await authService.signIn({ username: email, password });
+      console.log('✅ Authentication successful');
+      
+      // Step 2: Get the authenticated user data with retry logic
+      let cognitoUser = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts && !cognitoUser) {
+        try {
+          cognitoUser = await authService.getCurrentUser();
+          if (cognitoUser) break;
+        } catch (error) {
+          console.warn(`User data attempt ${attempts + 1} failed:`, error);
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          console.log(`Retrying user data retrieval (attempt ${attempts + 1}/${maxAttempts})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        }
+      }
+      
       if (cognitoUser) {
         const user: User = {
           id: cognitoUser.sub,
@@ -120,8 +141,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         setIsLoading(false);
       } else {
+        console.warn('⚠️ Could not retrieve user data, creating minimal user profile');
+        
+        // Create a minimal user profile as fallback
+        const fallbackUser: User = {
+          id: 'temp-' + Date.now(),
+          email: email,
+          name: email.split('@')[0],
+          subscriptionPlan: 'free',
+          subscriptionStatus: 'active',
+          createdAt: new Date(),
+        };
+        
+        setUser(fallbackUser);
         setIsLoading(false);
-        throw new Error('Failed to retrieve user data after sign in');
+        
+        // Try to get full user data in background
+        setTimeout(async () => {
+          try {
+            const retryUser = await authService.getCurrentUser();
+            if (retryUser) {
+              const fullUser: User = {
+                id: retryUser.sub,
+                email: retryUser.email,
+                name: retryUser.name || retryUser.given_name || retryUser.email.split('@')[0],
+                subscriptionPlan: retryUser['custom:subscription_plan'] || 'free',
+                subscriptionStatus: (retryUser['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+                subscriptionExpiry: retryUser['custom:subscription_expires'] 
+                  ? new Date(retryUser['custom:subscription_expires'])
+                  : undefined,
+                createdAt: new Date(),
+                phone: retryUser.phone_number,
+                company: retryUser['custom:company'],
+                address: retryUser.address,
+                city: retryUser['custom:city'],
+                country: retryUser['custom:country'],
+              };
+              console.log('✅ Updated user data from background retry:', fullUser);
+              setUser(fullUser);
+            }
+          } catch (backgroundError) {
+            console.warn('Background user data update failed:', backgroundError);
+          }
+        }, 3000);
       }
     } catch (error: any) {
       setIsLoading(false);
