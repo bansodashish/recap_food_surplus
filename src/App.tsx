@@ -18,6 +18,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
+import CognitoDebugComponent from './components/CognitoDebugComponent';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
@@ -93,6 +94,8 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          {/* Temporary debug component for troubleshooting */}
+          <CognitoDebugComponent />
         </div>
       </Router>
     </AuthProvider>
