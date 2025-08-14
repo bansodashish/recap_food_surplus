@@ -103,7 +103,41 @@ export function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
-                {error}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">{error}</div>
+                </div>
+                {(typeof error === 'string' && 
+                  (error.includes('already signed in') || error.includes('refresh the page'))) && (
+                  <div className="mt-3 flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          setIsLoading(true);
+                          const { authService } = await import('../services/auth');
+                          await authService.clearAuthCache();
+                          setError('');
+                          window.location.reload();
+                        } catch (err) {
+                          console.error('Clear cache error:', err);
+                          setError('Please refresh the page manually and try again.');
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Clear Session
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Refresh Page
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {!isLogin && (

@@ -114,9 +114,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(user);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign in error:', error);
-      throw new Error('Invalid credentials');
+      
+      // Handle specific error cases with more user-friendly messages
+      if (error.name === 'AlreadyAuthenticatedException' || 
+          error.message?.includes('already signed in') ||
+          error.message?.includes('already a signed in user')) {
+        // Try to clear cache and retry
+        try {
+          await authService.clearAuthCache();
+          // Retry the sign in
+          await authService.signIn({ username: email, password });
+          const cognitoUser = await authService.getCurrentUser();
+          if (cognitoUser) {
+            const user: User = {
+              id: cognitoUser.sub,
+              email: cognitoUser.email,
+              name: cognitoUser.name || cognitoUser.given_name || cognitoUser.email.split('@')[0],
+              subscriptionPlan: cognitoUser['custom:subscription_plan'] || 'free',
+              subscriptionStatus: (cognitoUser['custom:subscription_status'] as 'active' | 'cancelled' | 'past_due') || 'active',
+              subscriptionExpiry: cognitoUser['custom:subscription_expires'] 
+                ? new Date(cognitoUser['custom:subscription_expires'])
+                : undefined,
+              createdAt: new Date(),
+              phone: cognitoUser.phone_number,
+              company: cognitoUser['custom:company'],
+              address: cognitoUser.address,
+              city: cognitoUser['custom:city'],
+              country: cognitoUser['custom:country'],
+            };
+            setUser(user);
+            return; // Success after retry
+          }
+        } catch (retryError) {
+          console.error('Retry failed:', retryError);
+          throw new Error('Please refresh the page and try again. If the problem persists, clear your browser cache.');
+        }
+      } else if (error.name === 'UserNotConfirmedException') {
+        throw new Error('Please confirm your email address before signing in.');
+      } else if (error.name === 'UserNotFoundException') {
+        throw new Error('User not found. Please check your email or sign up for a new account.');
+      } else if (error.name === 'NotAuthorizedException') {
+        throw new Error('Invalid email or password. Please try again.');
+      } else {
+        throw new Error(error.message || 'Invalid credentials');
+      }
     } finally {
       setIsLoading(false);
     }

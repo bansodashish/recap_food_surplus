@@ -190,10 +190,39 @@ class AuthService {
   // Sign in user
   async signIn({ username, password }: SignInParams) {
     try {
+      // First, try to check if there's already a signed-in user
+      try {
+        const existingUser = await getCurrentUser();
+        if (existingUser) {
+          console.log('Found existing signed-in user, signing out first...');
+          await signOut();
+        }
+      } catch (error) {
+        // No existing user, which is fine
+        console.log('No existing user found, proceeding with sign-in');
+      }
+
       const result = await signIn({ username, password });
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in:', error);
+      
+      // Handle the "already signed in" error specifically
+      if (error.name === 'AlreadyAuthenticatedException' || 
+          error.message?.includes('already signed in') ||
+          error.message?.includes('already a signed in user')) {
+        console.log('User already signed in, clearing session and retrying...');
+        try {
+          await signOut();
+          // Retry the sign-in after clearing the session
+          const result = await signIn({ username, password });
+          return result;
+        } catch (retryError) {
+          console.error('Error on sign-in retry:', retryError);
+          throw retryError;
+        }
+      }
+      
       throw error;
     }
   }
@@ -205,6 +234,28 @@ class AuthService {
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
+    }
+  }
+
+  // Clear all cached authentication data
+  async clearAuthCache(): Promise<void> {
+    try {
+      // Sign out to clear Amplify cache
+      await signOut();
+      
+      // Clear localStorage items that might contain auth data
+      localStorage.removeItem('amplify-auth-session');
+      localStorage.removeItem('amplify-last-auth-user');
+      localStorage.removeItem('amplify-cognito-identity-id');
+      
+      // Clear sessionStorage as well
+      sessionStorage.removeItem('amplify-auth-session');
+      sessionStorage.removeItem('amplify-last-auth-user');
+      
+      console.log('Authentication cache cleared successfully');
+    } catch (error) {
+      console.log('Note: Error during cache clear (this is often normal):', error);
+      // Don't throw here as we want to clear cache even if sign out fails
     }
   }
 
