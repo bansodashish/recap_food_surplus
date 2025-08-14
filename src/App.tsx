@@ -39,7 +39,7 @@ function App() {
               <Route 
                 path="/donate" 
                 element={
-                  <ProtectedRoute requiresSubscription>
+                  <ProtectedRoute>
                     <DonatePage />
                   </ProtectedRoute>
                 } 
@@ -47,7 +47,7 @@ function App() {
               <Route 
                 path="/sell" 
                 element={
-                  <ProtectedRoute requiresSubscription>
+                  <ProtectedRoute>
                     <SellPage />
                   </ProtectedRoute>
                 } 
@@ -87,7 +87,7 @@ function App() {
               <Route 
                 path="/add-item" 
                 element={
-                  <ProtectedRoute requiresSubscription>
+                  <ProtectedRoute>
                     <AddItemPage />
                   </ProtectedRoute>
                 } 

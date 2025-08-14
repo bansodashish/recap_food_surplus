@@ -263,16 +263,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return !!user;
   };
 
-  const getItemListingLimits = () => {
+    const getItemListingLimits = () => {
     if (!user) return { maxItems: 0, canUploadCSV: false, hasAPIAccess: false };
     
     const limits = {
-      free: { maxItems: 5, canUploadCSV: true, hasAPIAccess: false },
-      premium: { maxItems: 50, canUploadCSV: true, hasAPIAccess: true },
+      free: { maxItems: 5, canUploadCSV: false, hasAPIAccess: false },
+      premium: { maxItems: -1, canUploadCSV: true, hasAPIAccess: false }, // -1 means unlimited
       enterprise: { maxItems: -1, canUploadCSV: true, hasAPIAccess: true } // -1 means unlimited
-    };
-    
-    return limits[user.subscriptionPlan] || limits.free;
+    }[user.subscriptionPlan || 'free'];
+
+    return limits;
   };
 
   const canAccessFeature = (feature: string) => {
