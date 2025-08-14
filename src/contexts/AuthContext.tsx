@@ -125,6 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, name: string, profileData?: { phone?: string; company?: string; address?: string; city?: string; country?: string }) => {
     setIsLoading(true);
     try {
+      console.log('🔄 AuthContext: Starting signup process...', { email, name });
+      
       // Use AWS Cognito for user registration - Basic version without custom attributes
       await authService.signUp({
         username: email,
@@ -135,11 +137,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         address: profileData?.address
       });
       
+      console.log('✅ AuthContext: Signup successful');
       // After successful signup, the user needs to verify their email
       // The actual sign-in will happen after email verification
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw new Error('Failed to create account');
+    } catch (error: any) {
+      console.error('❌ AuthContext: Sign up error:', {
+        message: error.message,
+        name: error.name,
+        originalError: error.originalError
+      });
+      
+      // Pass through the detailed error message from auth service
+      throw error;
     } finally {
       setIsLoading(false);
     }

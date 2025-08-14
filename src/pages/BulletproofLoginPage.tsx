@@ -278,23 +278,6 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
               <User className="mr-2 h-4 w-4" />
               Don't have an account? Sign up here
             </button>
-
-            {/* Additional prominent sign-up section */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-3">
-                  New to FoodSurplus? Join our mission to reduce food waste!
-                </p>
-                <button
-                  onClick={() => navigate('/signup')}
-                  className="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-colors"
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  Start Creating Account
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </button>
-              </div>
-            </div>
           </div>
         );
     }

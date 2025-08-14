@@ -19,8 +19,10 @@ import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
 import MyItemsPage from './pages/MyItemsPage';
+import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
 import S3DiagnosticPanel from './components/S3DiagnosticPanel';
+import AuthDebugPanel from './components/AuthDebugPanel';
 
 function App() {
   return (
@@ -56,6 +58,7 @@ function App() {
               <Route path="/login-old" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/confirm-signup" element={<ConfirmSignUpPage />} />
+              <Route path="/cognito-test" element={<CognitoTestPage />} />
               <Route 
                 path="/profile" 
                 element={
@@ -93,6 +96,7 @@ function App() {
           </main>
           <Footer />
           <S3DiagnosticPanel />
+          <AuthDebugPanel />
         </div>
       </Router>
     </AuthProvider>

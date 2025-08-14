@@ -75,6 +75,8 @@ class AuthService {
   // Sign up a new user - Basic version without custom attributes
   async signUp({ username, password, email, name, phone, address }: BasicSignUpParams) {
     try {
+      console.log('🔄 Starting signup process...', { username, email, name });
+      
       const userAttributes: Record<string, string> = {
         email,
       };
@@ -84,6 +86,8 @@ class AuthService {
       if (phone) userAttributes.phone_number = phone;
       if (address) userAttributes.address = address;
 
+      console.log('📝 User attributes:', userAttributes);
+
       const result = await signUp({
         username,
         password,
@@ -91,10 +95,61 @@ class AuthService {
           userAttributes,
         },
       });
+      
+      console.log('✅ Signup successful:', { 
+        userId: result.userId, 
+        nextStep: result.nextStep 
+      });
+      
       return result;
-    } catch (error) {
-      console.error('Error signing up:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ Signup error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        statusCode: error.$metadata?.httpStatusCode
+      });
+
+      // Provide user-friendly error messages
+      let userFriendlyMessage = 'Failed to create account';
+      
+      switch (error.name) {
+        case 'UsernameExistsException':
+          userFriendlyMessage = 'An account with this email already exists. Please use a different email or try signing in.';
+          break;
+        case 'InvalidPasswordException':
+          userFriendlyMessage = 'Password must be at least 8 characters and include uppercase, lowercase, and numbers.';
+          break;
+        case 'InvalidParameterException':
+          userFriendlyMessage = 'Please check that your email address is valid and all required fields are filled.';
+          break;
+        case 'TooManyRequestsException':
+          userFriendlyMessage = 'Too many attempts. Please wait a few minutes before trying again.';
+          break;
+        case 'CodeDeliveryFailureException':
+          userFriendlyMessage = 'Unable to send confirmation email. Please check your email address and try again.';
+          break;
+        case 'LimitExceededException':
+          userFriendlyMessage = 'Account creation limit exceeded. Please contact support if this continues.';
+          break;
+        case 'NetworkError':
+          userFriendlyMessage = 'Network connection error. Please check your internet connection and try again.';
+          break;
+        default:
+          if (error.message?.includes('Network Error') || error.message?.includes('fetch')) {
+            userFriendlyMessage = 'Network connection error. Please check your internet connection and try again.';
+          } else if (error.message?.includes('User Pool') || error.message?.includes('Client')) {
+            userFriendlyMessage = 'Authentication service temporarily unavailable. Please try again in a few minutes.';
+          }
+      }
+
+      // Create a new error with the user-friendly message but preserve original error details
+      const enhancedError = new Error(userFriendlyMessage);
+      (enhancedError as any).originalError = error;
+      (enhancedError as any).name = error.name;
+      (enhancedError as any).code = error.code;
+      
+      throw enhancedError;
     }
   }
 
