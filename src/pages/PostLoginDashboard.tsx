@@ -3,386 +3,403 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   PlusCircle, 
-  Upload, 
-  Zap, 
-  Crown, 
-  Users, 
-  Building, 
-  CheckCircle, 
-  AlertTriangle,
-  ArrowRight
+  Heart, 
+  TrendingUp, 
+  Star,
+  MapPin,
+  Calendar,
+  Eye,
+  BarChart3,
+  FileText,
+  MessageSquare,
+  Activity
 } from 'lucide-react';
 
+interface Listing {
+  id: string;
+  title: string;
+  type: 'SALE' | 'DONATION' | 'REQUEST';
+  status: 'ACTIVE' | 'EXPIRED' | 'COMPLETED';
+  location: string;
+  expiryDate: string;
+  views: number;
+  price?: string;
+}
+
+interface UserStats {
+  activeListings: number;
+  donationsMade: number;
+  itemsSold: number;
+  rating: number;
+  sustainabilityScore: number;
+}
+
 export const PostLoginDashboard: React.FC = () => {
-  const { user, updateSubscription } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium' | 'enterprise'>('free');
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [userStats] = useState<UserStats>({
+    activeListings: 12,
+    donationsMade: 4,
+    itemsSold: 0,
+    rating: 4.8,
+    sustainabilityScore: 85
+  });
+
+  // Mock data for recent listings - in a real app, this would come from an API
+  const [recentListings] = useState<Listing[]>([
+    {
+      id: '1',
+      title: 'Premium Yogurt Varieties',
+      type: 'SALE',
+      status: 'ACTIVE',
+      location: 'Bristol',
+      expiryDate: '2025-01-21',
+      views: 16,
+      price: '1.45'
+    },
+    {
+      id: '2',
+      title: 'Frozen Berry Mix',
+      type: 'DONATION',
+      status: 'ACTIVE',
+      location: 'Glasgow',
+      expiryDate: '2025-03-15',
+      views: 64
+    },
+    {
+      id: '3',
+      title: 'Fresh Herb Collection',
+      type: 'SALE',
+      status: 'ACTIVE',
+      location: 'Canterbury',
+      expiryDate: '2025-01-19',
+      views: 84,
+      price: '8.50'
+    },
+    {
+      id: '4',
+      title: 'Pastries & Desserts',
+      type: 'SALE',
+      status: 'ACTIVE',
+      location: 'Oxford',
+      expiryDate: '2025-01-15',
+      views: 65,
+      price: '2.95'
+    },
+    {
+      id: '5',
+      title: 'Organic Free-Range Chicken',
+      type: 'DONATION',
+      status: 'ACTIVE',
+      location: 'Manchester',
+      expiryDate: '2025-01-18',
+      views: 42
+    }
+  ]);
 
   useEffect(() => {
-    // Check if this is a new user who hasn't selected a subscription yet
-    if (user && !user.subscriptionPlan) {
-      setIsNewUser(true);
-      setShowSubscriptionModal(true);
-    }
-  }, [user]);
+    // In a real app, fetch user stats and listings from API
+    // fetchUserStats();
+    // fetchRecentListings();
+  }, []);
 
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  const plans = [
-    {
-      id: 'free' as const,
-      name: 'Free',
-      price: 0,
-      description: 'Perfect for getting started',
-      icon: Users,
-      features: [
-        'Up to 5 active listings',
-        'Basic search visibility',
-        'Standard messaging',
-        'Community access',
-        'Basic sustainability tracking'
-      ],
-      limitations: [
-        'Limited to 5 items total',
-        'No CSV upload',
-        'No API access'
-      ],
-      buttonText: 'Stay Free',
-      color: 'gray'
-    },
-    {
-      id: 'premium' as const,
-      name: 'Premium',
-      price: 49,
-      description: 'For growing businesses',
-      icon: Crown,
-      features: [
-        'Unlimited listings',
-        'Enhanced search visibility',
-        'Priority messaging',
-        'Advanced analytics',
-        'CSV upload with photos',
-        'Priority support'
-      ],
-      limitations: [
-        'No API access'
-      ],
-      buttonText: 'Go Premium',
-      color: 'yellow',
-      popular: true
-    },
-    {
-      id: 'enterprise' as const,
-      name: 'Enterprise',
-      price: 199,
-      description: 'For large organizations',
-      icon: Building,
-      features: [
-        'Everything in Premium',
-        'Full API access',
-        'Custom integrations',
-        'Dedicated account manager',
-        'Custom reporting',
-        'White label solutions'
-      ],
-      limitations: [],
-      buttonText: 'Go Enterprise',
-      color: 'purple'
-    }
-  ];
-
-  const handlePlanSelect = async (planId: 'free' | 'premium' | 'enterprise') => {
-    if (planId === 'free') {
-      try {
-        await updateSubscription(planId);
-        setShowSubscriptionModal(false);
-        // Redirect to add items
-        navigate('/add-item');
-      } catch (error) {
-        console.error('Error updating subscription:', error);
-      }
-    } else {
-      // For paid plans, redirect to subscription page for payment
-      navigate('/subscription');
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'SALE':
+        return 'bg-blue-100 text-blue-800';
+      case 'DONATION':
+        return 'bg-green-100 text-green-800';
+      case 'REQUEST':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getAddItemButtonContent = () => {
-    const limits = {
-      free: { maxItems: 5, canUploadCSV: false, hasAPIAccess: false },
-      premium: { maxItems: -1, canUploadCSV: true, hasAPIAccess: false },
-      enterprise: { maxItems: -1, canUploadCSV: true, hasAPIAccess: true }
-    }[user.subscriptionPlan || 'free'];
-
-    return {
-      title: user.subscriptionPlan === 'free' ? 'Add Items (5 max)' : 'Add Unlimited Items',
-      methods: [
-        {
-          id: 'manual',
-          name: 'Manual Entry',
-          description: 'Add items one by one with detailed information',
-          icon: PlusCircle,
-          available: true,
-          badge: null
-        },
-        {
-          id: 'csv',
-          name: 'CSV Upload + Photos',
-          description: 'Bulk upload items with CSV file and photos to S3',
-          icon: Upload,
-          available: limits.canUploadCSV,
-          badge: limits.canUploadCSV ? null : 'Premium+'
-        },
-        {
-          id: 'api',
-          name: 'API Integration',
-          description: 'Integrate with your existing systems via REST API',
-          icon: Zap,
-          available: limits.hasAPIAccess,
-          badge: limits.hasAPIAccess ? null : 'Enterprise Only'
-        }
-      ]
-    };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return 'bg-green-100 text-green-800';
+      case 'EXPIRED':
+        return 'bg-red-100 text-red-800';
+      case 'COMPLETED':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const addItemContent = getAddItemButtonContent();
+  const tabs = ['Overview', 'My Listings', 'My Requests', 'Messages', 'Impact Metrics'];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Welcome Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome back, {user.name}! 👋
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Current Plan: <span className="font-semibold capitalize">{user.subscriptionPlan}</span>
-                {user.subscriptionPlan === 'free' && (
-                  <button
-                    onClick={() => setShowSubscriptionModal(true)}
-                    className="ml-2 text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Upgrade →
-                  </button>
-                )}
-              </p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => navigate('/profile')}
-                className="px-4 py-2 text-gray-600 hover:text-gray-900"
-              >
-                Profile
-              </button>
-              <button
-                onClick={() => navigate('/my-items')}
-                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
-              >
-                My Items
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-2">Manage your listings and track your sustainability impact</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Listings</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-600">Active Listings</p>
+                <p className="text-3xl font-bold text-gray-900">{userStats.activeListings}</p>
               </div>
-              <PlusCircle className="h-8 w-8 text-green-600" />
+              <div className="bg-blue-100 p-3 rounded-full">
+                <BarChart3 className="h-6 w-6 text-blue-600" />
+              </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Items Sold/Donated</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-600">Donations Made</p>
+                <p className="text-3xl font-bold text-gray-900">{userStats.donationsMade}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-blue-600" />
+              <div className="bg-green-100 p-3 rounded-full">
+                <Heart className="h-6 w-6 text-green-600" />
+              </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Environmental Impact</p>
-                <p className="text-2xl font-bold text-gray-900">0 kg</p>
+                <p className="text-sm font-medium text-gray-600">Items Sold</p>
+                <p className="text-3xl font-bold text-gray-900">{userStats.itemsSold}</p>
               </div>
-              <Users className="h-8 w-8 text-green-600" />
+              <div className="bg-purple-100 p-3 rounded-full">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Rating</p>
+                <p className="text-3xl font-bold text-gray-900">{userStats.rating}</p>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <Star className="h-6 w-6 text-yellow-600" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Add Items Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">{addItemContent.title}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {addItemContent.methods.map((method) => {
-              const IconComponent = method.icon;
-              return (
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              {tabs.map((tab) => (
                 <button
-                  key={method.id}
-                  onClick={() => method.available ? navigate('/add-item', { state: { method: method.id } }) : setShowSubscriptionModal(true)}
-                  disabled={!method.available}
-                  className={`
-                    relative p-6 border-2 rounded-lg text-left transition-all
-                    ${method.available 
-                      ? 'border-gray-200 hover:border-blue-300 hover:shadow-md cursor-pointer' 
-                      : 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-75'
-                    }
-                  `}
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
                 >
-                  {method.badge && (
-                    <span className="absolute top-2 right-2 px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded">
-                      {method.badge}
-                    </span>
-                  )}
-                  <IconComponent className={`h-8 w-8 mb-3 ${method.available ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <h3 className="font-medium text-gray-900 mb-2">{method.name}</h3>
-                  <p className="text-sm text-gray-600">{method.description}</p>
-                  {!method.available && (
-                    <div className="mt-3 flex items-center text-xs text-yellow-600">
-                      <AlertTriangle className="h-4 w-4 mr-1" />
-                      Upgrade required
-                    </div>
-                  )}
+                  {tab}
                 </button>
-              );
-            })}
+              ))}
+            </nav>
           </div>
-        </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-          <div className="text-center py-8">
-            <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No activity yet. Start by adding your first item!</p>
-            <button
-              onClick={() => navigate('/add-item')}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Add First Item
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Subscription Selection Modal */}
-      {showSubscriptionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {isNewUser ? 'Choose Your Plan' : 'Upgrade Your Account'}
-              </h2>
-              <p className="text-gray-600 mt-1">
-                {isNewUser 
-                  ? 'Select a plan that fits your food surplus management needs'
-                  : 'Unlock more features with a premium plan'
-                }
-              </p>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {plans.map((plan) => {
-                  const IconComponent = plan.icon;
-                  return (
-                    <div
-                      key={plan.id}
-                      className={`
-                        relative border-2 rounded-lg p-6 cursor-pointer transition-all
-                        ${selectedPlan === plan.id 
-                          ? 'border-blue-500 ring-2 ring-blue-200' 
-                          : 'border-gray-200 hover:border-gray-300'
-                        }
-                        ${plan.popular ? 'ring-2 ring-yellow-200' : ''}
-                      `}
-                      onClick={() => setSelectedPlan(plan.id)}
-                    >
-                      {plan.popular && (
-                        <span className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 px-3 py-1 text-xs font-bold rounded-full">
-                          POPULAR
-                        </span>
-                      )}
-                      
-                      <div className="text-center mb-4">
-                        <IconComponent className="h-12 w-12 mx-auto mb-2 text-gray-600" />
-                        <h3 className="text-xl font-bold">{plan.name}</h3>
-                        <div className="mt-2">
-                          <span className="text-3xl font-bold">£{plan.price}</span>
-                          {plan.price > 0 && <span className="text-gray-600">/month</span>}
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+          <div className="p-6">
+            {activeTab === 'Overview' && (
+              <div className="space-y-6">
+                {/* Recent Listings */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-gray-900">Recent Listings</h2>
+                  <div className="flex items-center space-x-2">
+                    <div className="bg-white rounded-lg p-2 border border-gray-200">
+                      <span className="text-xl font-bold text-green-600">{userStats.sustainabilityScore}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">Sustainability Score</p>
+                      <div className="flex items-center">
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Gold</span>
                       </div>
+                    </div>
+                  </div>
+                </div>
 
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="font-medium text-green-700 mb-2">Included:</h4>
-                          <ul className="space-y-1">
-                            {plan.features.map((feature, index) => (
-                              <li key={index} className="flex items-start text-sm">
-                                <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 mr-2 flex-shrink-0" />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
+                <div className="space-y-3">
+                  {recentListings.map((listing) => (
+                    <div
+                      key={listing.id}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="text-lg font-medium text-gray-900">{listing.title}</h3>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(listing.type)}`}>
+                              {listing.type}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(listing.status)}`}>
+                              {listing.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-gray-600">
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="h-4 w-4" />
+                              <span>{listing.location}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-4 w-4" />
+                              <span>Expires: {listing.expiryDate}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Eye className="h-4 w-4" />
+                              <span>{listing.views} views</span>
+                            </div>
+                          </div>
                         </div>
-                        
-                        {plan.limitations.length > 0 && (
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Limitations:</h4>
-                            <ul className="space-y-1">
-                              {plan.limitations.map((limitation, index) => (
-                                <li key={index} className="flex items-start text-sm text-gray-600">
-                                  <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" />
-                                  {limitation}
-                                </li>
-                              ))}
-                            </ul>
+                        {listing.price && (
+                          <div className="text-right">
+                            <p className="text-lg font-semibold text-gray-900">£{listing.price}</p>
+                          </div>
+                        )}
+                        {listing.type === 'DONATION' && !listing.price && (
+                          <div className="text-right">
+                            <p className="text-sm text-green-600 font-medium">FREE</p>
                           </div>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ))}
+                </div>
 
-            <div className="p-6 border-t bg-gray-50 flex justify-between">
-              {!isNewUser && (
+                {/* Quick Actions */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button
+                      onClick={() => navigate('/add-item')}
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      <span>Add New Listing</span>
+                    </button>
+                    <button
+                      onClick={() => navigate('/request')}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                      <span>Request Item</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('Impact Metrics')}
+                      className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Activity className="h-5 w-5" />
+                      <span>View ESG Report</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'My Listings' && (
+              <div className="text-center py-8">
+                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Your listings will appear here</p>
                 <button
-                  onClick={() => setShowSubscriptionModal(false)}
-                  className="px-6 py-2 text-gray-600 hover:text-gray-800"
+                  onClick={() => navigate('/add-item')}
+                  className="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  Cancel
-                </button>
-              )}
-              <div className="flex space-x-3 ml-auto">
-                <button
-                  onClick={() => handlePlanSelect(selectedPlan)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-                >
-                  {selectedPlan === 'free' ? 'Continue with Free' : `Select ${plans.find(p => p.id === selectedPlan)?.name}`}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  Create Your First Listing
                 </button>
               </div>
-            </div>
+            )}
+
+            {activeTab === 'My Requests' && (
+              <div className="text-center py-8">
+                <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Your requests will appear here</p>
+                <button
+                  onClick={() => navigate('/request')}
+                  className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Make Your First Request
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'Messages' && (
+              <div className="text-center py-8">
+                <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Messages will appear here</p>
+              </div>
+            )}
+
+            {activeTab === 'Impact Metrics' && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-green-100 mb-4">
+                    <span className="text-4xl font-bold text-green-600">{userStats.sustainabilityScore}</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900">Sustainability Score</h3>
+                  <div className="flex items-center justify-center mt-2">
+                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">Gold Level</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Environmental Impact</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">CO₂ Saved</span>
+                        <span className="text-sm font-medium">45.2 kg</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Waste Reduced</span>
+                        <span className="text-sm font-medium">28.7 kg</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Water Saved</span>
+                        <span className="text-sm font-medium">156 L</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Community Impact</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">People Helped</span>
+                        <span className="text-sm font-medium">23</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Value Shared</span>
+                        <span className="text-sm font-medium">£342</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Community Rating</span>
+                        <span className="text-sm font-medium">4.8/5.0</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
