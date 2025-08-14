@@ -18,7 +18,6 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
-import AWSInfrastructureDiagnostic from './components/AWSInfrastructureDiagnostic';
 import { PostLoginDashboard } from './pages/PostLoginDashboard';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
@@ -103,8 +102,6 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          {/* Infrastructure diagnostic for troubleshooting */}
-          <AWSInfrastructureDiagnostic />
         </div>
       </Router>
     </AuthProvider>
