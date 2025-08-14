@@ -7,11 +7,9 @@ import { useAuth } from '../contexts/AuthContext';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Browse', href: '/browse' },
-  { name: 'Request', href: '/request' },
-  { name: 'Donate', href: '/donate' },
-  { name: 'Sell', href: '/sell' },
-  { name: 'My Items', href: '/my-items', authRequired: true },
-  { name: 'Add Item', href: '/add-item', authRequired: true },
+  { name: 'Requests', href: '/request' },
+  { name: 'Donate', href: '/donate', authRequired: true },
+  { name: 'Sell', href: '/sell', authRequired: true },
   { name: 'About', href: '/about' },
   { name: 'Sustainability', href: '/sustainability' },
 ];
@@ -31,9 +29,9 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <Leaf className="h-8 w-8 text-primary-600" />
+              <Leaf className="h-8 w-8 text-green-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">
-                Recap Food
+                FreshFlo
               </span>
             </Link>
           </div>
@@ -70,8 +68,11 @@ export function Navbar() {
                   >
                     <Crown className="h-4 w-4" />
                     <span>
-                      {user.subscriptionPlan === 'free' ? 'Upgrade' : 
-                       user.subscriptionPlan === 'premium' ? 'Premium' : 'Enterprise'}
+                      {(() => {
+                        if (user.subscriptionPlan === 'free') return 'Upgrade';
+                        if (user.subscriptionPlan === 'premium') return 'Premium';
+                        return 'Enterprise';
+                      })()}
                     </span>
                   </Link>
                   
@@ -150,8 +151,11 @@ export function Navbar() {
                   >
                     <Crown className="h-4 w-4" />
                     <span>
-                      {user.subscriptionPlan === 'free' ? 'Upgrade Plan' : 
-                       user.subscriptionPlan === 'premium' ? 'Premium Plan' : 'Enterprise Plan'}
+                      {(() => {
+                        if (user.subscriptionPlan === 'free') return 'Upgrade Plan';
+                        if (user.subscriptionPlan === 'premium') return 'Premium Plan';
+                        return 'Enterprise Plan';
+                      })()}
                     </span>
                   </Link>
                   
