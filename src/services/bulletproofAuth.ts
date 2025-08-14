@@ -183,6 +183,19 @@ export class BulletproofAuthService {
   }> {
     console.log('🎯 Starting bulletproof sign in process...');
 
+    // Strategy 1: Check for existing session and clear if needed
+    try {
+      const existingUser = await getCurrentUser();
+      if (existingUser) {
+        console.log('🔄 Found existing signed-in user, clearing session first...');
+        await signOut();
+        console.log('✅ Session cleared successfully');
+      }
+    } catch (error) {
+      // No existing user or error getting user - this is normal
+      console.log('ℹ️ No existing user session found, proceeding with sign-in');
+    }
+
     try {
       const result = await this.executeWithRetry(async () => {
         return await signIn({
@@ -200,6 +213,50 @@ export class BulletproofAuthService {
 
     } catch (error: any) {
       console.error('❌ Sign in failed:', error);
+
+      // Handle "already signed in" error specifically
+      if (error.name === 'AlreadyAuthenticatedException' || 
+          error.message?.includes('already signed in') ||
+          error.message?.includes('already a signed in user')) {
+        console.log('🔄 Handling already authenticated error, clearing cache and retrying...');
+        
+        try {
+          // Clear all authentication cache
+          await signOut();
+          
+          // Clear localStorage and sessionStorage
+          localStorage.removeItem('amplify-auth-session');
+          localStorage.removeItem('amplify-last-auth-user');
+          localStorage.removeItem('amplify-cognito-identity-id');
+          sessionStorage.removeItem('amplify-auth-session');
+          sessionStorage.removeItem('amplify-last-auth-user');
+          
+          console.log('✅ Authentication cache cleared, retrying sign-in...');
+          
+          // Retry the sign in
+          const retryResult = await this.executeWithRetry(async () => {
+            return await signIn({
+              username: email,
+              password
+            });
+          }, 'Retry SignIn After Cache Clear');
+
+          return {
+            success: true,
+            isSignedIn: retryResult.isSignedIn,
+            nextStep: retryResult.nextStep,
+            strategy: 'cache_cleared_retry'
+          };
+          
+        } catch (retryError: any) {
+          console.error('❌ Sign in retry failed after cache clear:', retryError);
+          return {
+            success: false,
+            error: 'Session conflict resolved but sign-in failed. Please refresh the page and try again.',
+            strategy: 'cache_clear_retry_failed'
+          };
+        }
+      }
 
       // Enhanced error handling with specific strategies
       if (error.name === 'UserNotConfirmedException') {

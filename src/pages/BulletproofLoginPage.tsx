@@ -28,7 +28,7 @@ export function BulletproofLoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/dashboard';
 
   // Debug logging to confirm which login page is loading
   useEffect(() => {
@@ -85,10 +85,61 @@ export function BulletproofLoginPage() {
         showMessage('info', 'Please confirm your account. Check your email for confirmation code.');
         setAuthState('confirm');
       } else {
-        showMessage('error', result.error || 'Sign in failed');
+        // Check if it's a session-related error that user can resolve
+        if (result.error?.includes('refresh the page') || 
+            result.error?.includes('already signed in') ||
+            result.strategy === 'cache_clear_retry_failed') {
+          setMessage({ 
+            type: 'error', 
+            text: `${result.error || 'Sign in failed'} - Try clearing your session manually.`
+          });
+        } else {
+          showMessage('error', result.error || 'Sign in failed');
+        }
       }
     } catch (error: any) {
-      showMessage('error', `Sign in failed: ${error.message}`);
+      // Handle any unexpected errors
+      const errorMessage = error.message || 'Sign in failed';
+      if (errorMessage.includes('already signed in') || errorMessage.includes('refresh')) {
+        setMessage({ 
+          type: 'error', 
+          text: `${errorMessage} - Try clearing your session manually.`
+        });
+      } else {
+        showMessage('error', `Sign in failed: ${errorMessage}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearSession = async () => {
+    setIsLoading(true);
+    try {
+      // Clear all authentication cache
+      await bulletproofAuth.bulletproofSignOut();
+      
+      // Clear browser storage
+      localStorage.removeItem('amplify-auth-session');
+      localStorage.removeItem('amplify-last-auth-user');
+      localStorage.removeItem('amplify-cognito-identity-id');
+      sessionStorage.removeItem('amplify-auth-session');
+      sessionStorage.removeItem('amplify-last-auth-user');
+      
+      showMessage('success', 'Session cleared successfully! Please try signing in again.');
+      setMessage(null);
+      
+      // Small delay then refresh
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error clearing session:', error);
+      showMessage('info', 'Session cleared. Please refresh the page and try again.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } finally {
       setIsLoading(false);
     }
@@ -304,9 +355,33 @@ ${result.recommendations.length > 0 ? '💡 Recommendations: ' + result.recommen
           
           {/* Message Display */}
           {message && (
-            <div className={`mb-4 p-3 rounded-md flex items-center ${getMessageStyles(message.type)}`}>
-              {getMessageIcon(message.type)}
-              <div className="text-sm whitespace-pre-line">{message.text}</div>
+            <div className={`mb-4 p-3 rounded-md ${getMessageStyles(message.type)}`}>
+              <div className="flex items-start">
+                {getMessageIcon(message.type)}
+                <div className="flex-1">
+                  <div className="text-sm whitespace-pre-line">{message.text}</div>
+                  
+                  {/* Show clear session button for session-related errors */}
+                  {message.type === 'error' && 
+                   message.text.includes('session') && (
+                    <div className="mt-3 flex space-x-2">
+                      <button
+                        onClick={handleClearSession}
+                        disabled={isLoading}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                      >
+                        {isLoading ? 'Clearing...' : 'Clear Session & Retry'}
+                      </button>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="inline-flex items-center px-3 py-1 border border-red-300 text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Refresh Page
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
