@@ -1,7 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Camera, MapPin, Calendar, Clock, DollarSign, Heart, Plus, Minus } from 'lucide-react';
+import { authService } from '../services/auth';
+import { foodItemsService } from '../services/foodItems';
+import type { CreateFoodItemRequest } from '../types/foodItem';
+import { FOOD_CATEGORIES } from '../types/foodItem';
 
 export function DonatePage() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -14,18 +21,10 @@ export function DonatePage() {
     isDonation: true
   });
 
-  const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
-  const categories = [
-    'Fruits & Vegetables',
-    'Bakery Items',
-    'Prepared Meals',
-    'Dairy Products',
-    'Meat & Seafood',
-    'Pantry Items',
-    'Beverages',
-    'Other'
-  ];
+  const categories = FOOD_CATEGORIES.map(cat => cat.label);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -45,11 +44,17 @@ export function DonatePage() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      Array.from(files).forEach(file => {
+      const fileArray = Array.from(files).slice(0, 4 - imageFiles.length);
+      
+      // Store actual File objects
+      setImageFiles(prev => [...prev, ...fileArray]);
+      
+      // Create preview URLs
+      fileArray.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setImages(prev => [...prev, e.target!.result as string]);
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setPreviewImages(prev => [...prev, event.target!.result as string]);
           }
         };
         reader.readAsDataURL(file);
@@ -58,13 +63,77 @@ export function DonatePage() {
   };
 
   const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+    // Remove from both arrays
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages(prev => {
+      const newPreviews = prev.filter((_, i) => i !== index);
+      // Cleanup the removed preview URL
+      if (prev[index]) {
+        URL.revokeObjectURL(prev[index]);
+      }
+      return newPreviews;
+    });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData, images);
-    // Handle form submission
+    setLoading(true);
+
+    try {
+      const user = await authService.getCurrentUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      // Map category name back to value
+      const categoryValue = FOOD_CATEGORIES.find(cat => cat.label === formData.category)?.value || 'other';
+
+      const itemData: CreateFoodItemRequest = {
+        title: formData.title,
+        description: formData.description,
+        category: categoryValue as any,
+        type: formData.isDonation ? 'donation' : 'sale',
+        price: formData.isDonation ? undefined : parseFloat(formData.price) || undefined,
+        quantity: formData.quantity,
+        unit: 'pieces',
+        condition: 'good',
+        expiryDate: formData.expirationDate,
+        images: imageFiles,
+        location: {
+          address: formData.location,
+          city: '',
+          zipCode: '',
+          country: 'US',
+        },
+        pickupAvailable: true,
+        deliveryAvailable: false,
+        contactInfo: {
+          name: `${user.given_name || ''} ${user.family_name || ''}`.trim() || user.email,
+          email: user.email,
+          phone: user.phone_number || '',
+          preferredContact: 'email',
+        },
+        dietaryInfo: {
+          vegetarian: false,
+          vegan: false,
+          glutenFree: false,
+          organic: false,
+          halal: false,
+          kosher: false,
+        },
+      };
+
+      await foodItemsService.createFoodItem(itemData, user.sub);
+      
+      // Success - redirect to my items page
+      navigate('/my-items');
+    } catch (error) {
+      console.error('Error creating item:', error);
+      alert('Failed to create item. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -125,8 +194,8 @@ export function DonatePage() {
               Add Photos of Your Food
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              {images.map((image, index) => (
-                <div key={index} className="relative aspect-square">
+              {previewImages.map((image, index) => (
+                <div key={`image-${index}`} className="relative aspect-square">
                   <img
                     src={image}
                     alt={`Food ${index + 1}`}
@@ -142,7 +211,7 @@ export function DonatePage() {
                 </div>
               ))}
               
-              {images.length < 4 && (
+              {previewImages.length < 4 && (
                 <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary-500 hover:bg-primary-50 transition-colors duration-200">
                   <Camera className="h-8 w-8 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600">Add Photo</span>
@@ -322,9 +391,13 @@ export function DonatePage() {
           <div className="flex justify-center pt-6">
             <button
               type="submit"
-              className="px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200 shadow-lg"
+              disabled={loading}
+              className="px-8 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 transition-colors duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {formData.isDonation ? 'Share Your Donation' : 'List for Sale'}
+              {loading 
+                ? (formData.isDonation ? 'Creating Donation...' : 'Creating Listing...')
+                : (formData.isDonation ? 'Share Your Donation' : 'List for Sale')
+              }
             </button>
           </div>
         </form>

@@ -4,10 +4,72 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>FoodSurplus - Reduce Food Waste</title>
+    <meta name="description" content="Connect surplus food with those who need it. Reduce waste, help communities." />
+    <!-- Bulletproof loading styles -->
+    <style>
+      /* Loading fallback styles */
+      .loading-fallback {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: white;
+        text-align: center;
+      }
+      .loading-content {
+        max-width: 400px;
+        padding: 40px;
+      }
+      .loading-spinner {
+        border: 4px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top: 4px solid white;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root">
+      <!-- Fallback loading content -->
+      <div class="loading-fallback">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <h2>FoodSurplus</h2>
+          <p>Loading your sustainable food platform...</p>
+          <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+            Connecting communities • Reducing waste
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main-bulletproof.tsx"></script>
+    <!-- Fallback script if main fails -->
+    <script>
+      // Timeout fallback if main script fails to load
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        if (root && root.innerHTML.includes('loading-fallback')) {
+          root.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fee2e2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <div style="text-align: center; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h1 style="color: #dc2626; margin-bottom: 20px;">⚠️ Loading Error</h1>
+                <p style="margin-bottom: 20px;">The application failed to load properly.</p>
+                <button onclick="window.location.reload()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer;">🔄 Reload Page</button>
+              </div>
+            </div>
+          `;
+        }
+      }, 10000); // 10 second timeout
+    </script>
   </body>
 </html>

@@ -7,9 +7,9 @@ import { useAuth } from '../contexts/AuthContext';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Browse', href: '/browse' },
-  { name: 'Request', href: '/request' },
-  { name: 'Donate', href: '/donate' },
-  { name: 'Sell', href: '/sell' },
+  { name: 'Requests', href: '/request' },
+  { name: 'Donate', href: '/donate', authRequired: true },
+  { name: 'Sell', href: '/sell', authRequired: true },
   { name: 'About', href: '/about' },
   { name: 'Sustainability', href: '/sustainability' },
 ];
@@ -29,29 +29,31 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <Leaf className="h-8 w-8 text-primary-600" />
+              <Leaf className="h-8 w-8 text-green-600" />
               <span className="ml-2 text-xl font-bold text-gray-900">
-                Recap Food
+                FreshFlo
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:ml-6 md:flex md:items-center md:space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'px-3 py-2 text-sm font-medium transition-colors duration-200',
-                  location.pathname === item.href
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-700 hover:text-primary-600 hover:border-b-2 hover:border-primary-300'
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navigation
+              .filter(item => !item.authRequired || user)
+              .map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'px-3 py-2 text-sm font-medium transition-colors duration-200',
+                    location.pathname === item.href
+                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      : 'text-gray-700 hover:text-primary-600 hover:border-b-2 hover:border-primary-300'
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
             
             <div className="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
               <button className="p-2 text-gray-400 hover:text-gray-500">
@@ -66,8 +68,11 @@ export function Navbar() {
                   >
                     <Crown className="h-4 w-4" />
                     <span>
-                      {user.subscriptionPlan === 'free' ? 'Upgrade' : 
-                       user.subscriptionPlan === 'premium' ? 'Premium' : 'Enterprise'}
+                      {(() => {
+                        if (user.subscriptionPlan === 'free') return 'Upgrade';
+                        if (user.subscriptionPlan === 'premium') return 'Premium';
+                        return 'Enterprise';
+                      })()}
                     </span>
                   </Link>
                   
@@ -119,21 +124,23 @@ export function Navbar() {
       {isOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200',
-                  location.pathname === item.href
-                    ? 'text-primary-600 bg-primary-50'
-                    : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
-                )}
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navigation
+              .filter(item => !item.authRequired || user)
+              .map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'block px-3 py-2 text-base font-medium rounded-md transition-colors duration-200',
+                    location.pathname === item.href
+                      ? 'text-primary-600 bg-primary-50'
+                      : 'text-gray-700 hover:text-primary-600 hover:bg-gray-50'
+                  )}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
             <div className="border-t border-gray-200 pt-4">
               {user ? (
                 <div className="space-y-2">
@@ -144,8 +151,11 @@ export function Navbar() {
                   >
                     <Crown className="h-4 w-4" />
                     <span>
-                      {user.subscriptionPlan === 'free' ? 'Upgrade Plan' : 
-                       user.subscriptionPlan === 'premium' ? 'Premium Plan' : 'Enterprise Plan'}
+                      {(() => {
+                        if (user.subscriptionPlan === 'free') return 'Upgrade Plan';
+                        if (user.subscriptionPlan === 'premium') return 'Premium Plan';
+                        return 'Enterprise Plan';
+                      })()}
                     </span>
                   </Link>
                   

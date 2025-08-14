@@ -140,7 +140,7 @@ export function ProfilePage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/donate')}
+                  onClick={() => navigate('/add-item')}
                   className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3"
                 >
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
