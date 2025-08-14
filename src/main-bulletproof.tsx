@@ -53,7 +53,7 @@ async function loadAmplifyConfig(): Promise<AmplifyConfig> {
       aws_project_region: import.meta.env.VITE_AWS_PROJECT_REGION || 'eu-west-1',
       aws_cognito_region: import.meta.env.VITE_AWS_COGNITO_REGION || 'eu-west-1',
       aws_user_pools_id: import.meta.env.VITE_AWS_USER_POOLS_ID || 'eu-west-1_Y2tRumZ22',
-      aws_user_pools_web_client_id: import.meta.env.VITE_AWS_USER_POOLS_WEB_CLIENT_ID || '1sh3gt6g7eupf69i8c1ht8ang0',
+      aws_user_pools_web_client_id: import.meta.env.VITE_AWS_USER_POOLS_WEB_CLIENT_ID || 'flshpq7e5kdqa00fre30g0t9p',
       aws_cognito_identity_pool_id: import.meta.env.VITE_AWS_COGNITO_IDENTITY_POOL_ID || 'eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078',
       aws_user_files_s3_bucket: import.meta.env.VITE_S3_BUCKET || 'bansoash-poc',
       aws_user_files_s3_bucket_region: import.meta.env.VITE_AWS_REGION || 'eu-west-1',
@@ -71,7 +71,7 @@ async function loadAmplifyConfig(): Promise<AmplifyConfig> {
       Auth: {
         region: import.meta.env.VITE_AWS_COGNITO_REGION || 'eu-west-1',
         userPoolId: import.meta.env.VITE_AWS_USER_POOLS_ID || 'eu-west-1_Y2tRumZ22',
-        userPoolWebClientId: import.meta.env.VITE_AWS_USER_POOLS_WEB_CLIENT_ID || '1sh3gt6g7eupf69i8c1ht8ang0',
+        userPoolWebClientId: import.meta.env.VITE_AWS_USER_POOLS_WEB_CLIENT_ID || 'flshpq7e5kdqa00fre30g0t9p',
         identityPoolId: import.meta.env.VITE_AWS_COGNITO_IDENTITY_POOL_ID || 'eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078',
       },
       Storage: {

@@ -3,7 +3,7 @@ const awsmobile = {
   aws_project_region: "eu-west-1",
   aws_cognito_region: "eu-west-1",
   aws_user_pools_id: "eu-west-1_Y2tRumZ22",
-  aws_user_pools_web_client_id: "1sh3gt6g7eupf69i8c1ht8ang0", // Fixed to match .env file
+  aws_user_pools_web_client_id: "flshpq7e5kdqa00fre30g0t9p", // Updated to current Client ID
   
   // 🔑 Identity Pool Configuration for S3 Access
   aws_cognito_identity_pool_id: "eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078",
@@ -28,7 +28,7 @@ const awsmobile = {
   Auth: {
     region: "eu-west-1",
     userPoolId: "eu-west-1_Y2tRumZ22",
-    userPoolWebClientId: "1sh3gt6g7eupf69i8c1ht8ang0", // Fixed to match .env file
+    userPoolWebClientId: "flshpq7e5kdqa00fre30g0t9p", // Updated to current Client ID
     identityPoolId: "eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078",
   },
   

@@ -18,7 +18,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { PaymentSuccessPage } from './pages/PaymentSuccessPage';
 import AddItemPage from './pages/AddItemPage';
-import CognitoDebugComponent from './components/CognitoDebugComponent';
+import AWSInfrastructureDiagnostic from './components/AWSInfrastructureDiagnostic';
+import InfrastructureDiagnostic from './components/InfrastructureDiagnostic';
 import MyItemsPage from './pages/MyItemsPage';
 import CognitoTestPage from './pages/CognitoTestPage';
 import { Footer } from './components/Footer';
@@ -94,8 +95,10 @@ function App() {
             </Routes>
           </main>
           <Footer />
-          {/* Temporary debug component for troubleshooting */}
-          <CognitoDebugComponent />
+          {/* Infrastructure diagnostic for troubleshooting configuration changes */}
+          <InfrastructureDiagnostic />
+          {/* Infrastructure diagnostic for troubleshooting */}
+          <AWSInfrastructureDiagnostic />
         </div>
       </Router>
     </AuthProvider>
