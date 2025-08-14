@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle, Leaf } from 'lucide-react';
 import { bulletproofAuth } from '../services/bulletproofAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FormData {
   email: string;
@@ -28,6 +29,7 @@ export function BulletproofLoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { signIn } = useAuth();
   const from = location.state?.from?.pathname || '/dashboard';
 
   // Debug logging to confirm which login page is loading
@@ -76,37 +78,39 @@ export function BulletproofLoginPage() {
     setMessage(null);
 
     try {
-      const result = await bulletproofAuth.bulletproofSignIn(formData.email, formData.password);
+      // Use AuthContext signIn method to ensure context is updated
+      await signIn(formData.email, formData.password);
       
-      if (result.success && result.isSignedIn) {
-        showMessage('success', 'Successfully signed in!');
-        setTimeout(() => navigate(from, { replace: true }), 1000);
-      } else if (result.nextStep?.signInStep === 'CONFIRM_SIGN_UP') {
+      showMessage('success', 'Successfully signed in! Redirecting...');
+      
+      // Navigate immediately - the AuthContext will handle the user state
+      navigate(from, { replace: true });
+      
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      
+      // Handle authentication errors with user-friendly messages
+      if (error.message?.includes('UserNotConfirmedException') || 
+          error.name === 'UserNotConfirmedException') {
         showMessage('info', 'Please confirm your account. Check your email for confirmation code.');
         setAuthState('confirm');
-      } else {
-        // Check if it's a session-related error that user can resolve
-        if (result.error?.includes('refresh the page') || 
-            result.error?.includes('already signed in') ||
-            result.strategy === 'cache_clear_retry_failed') {
-          setMessage({ 
-            type: 'error', 
-            text: `${result.error || 'Sign in failed'} - Try clearing your session manually.`
-          });
-        } else {
-          showMessage('error', result.error || 'Sign in failed');
-        }
-      }
-    } catch (error: any) {
-      // Handle any unexpected errors
-      const errorMessage = error.message || 'Sign in failed';
-      if (errorMessage.includes('already signed in') || errorMessage.includes('refresh')) {
+      } else if (error.message?.includes('already signed in') || 
+                 error.message?.includes('refresh the page') ||
+                 error.name === 'AlreadyAuthenticatedException') {
         setMessage({ 
           type: 'error', 
-          text: `${errorMessage} - Try clearing your session manually.`
+          text: `${error.message || 'Authentication conflict detected'} - Try clearing your session manually.`
         });
+      } else if (error.message?.includes('NotAuthorizedException') || 
+                 error.message?.includes('Incorrect username or password')) {
+        showMessage('error', 'Incorrect email or password. Please try again.');
+      } else if (error.message?.includes('TooManyRequestsException')) {
+        showMessage('error', 'Too many sign in attempts. Please wait a few minutes and try again.');
+      } else if (error.message?.includes('NetworkError') || 
+                 error.message?.includes('fetch')) {
+        showMessage('error', 'Network connection error. Please check your internet connection and try again.');
       } else {
-        showMessage('error', `Sign in failed: ${errorMessage}`);
+        showMessage('error', `Sign in failed: ${error.message || 'Unknown error occurred'}`);
       }
     } finally {
       setIsLoading(false);

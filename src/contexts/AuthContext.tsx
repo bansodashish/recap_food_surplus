@@ -112,9 +112,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           city: cognitoUser['custom:city'],
           country: cognitoUser['custom:country'],
         };
+        console.log('👤 Setting user state after sign in:', user);
         setUser(user);
+        
+        // Small delay to ensure state has propagated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        throw new Error('Failed to retrieve user data after sign in');
       }
     } catch (error: any) {
+      setIsLoading(false);
       console.error('Sign in error:', error);
       
       // Handle specific error cases with more user-friendly messages
