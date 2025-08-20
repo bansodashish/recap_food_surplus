@@ -1,6 +1,6 @@
 // Local Storage Service for Food Items with S3 integration
 import type { FoodItem, CreateFoodItemRequest } from '../types/foodItem';
-import { s3Service } from './s3';
+import { secureS3Service as s3Service } from './bulletproofS3Service';
 
 const STORAGE_KEY = 'foodItems';
 
@@ -9,6 +9,13 @@ export interface LocalFoodItem extends Omit<FoodItem, 'id'> {
   localId: string;
   syncedToAPI: boolean;
   lastSync?: string;
+  s3FolderPath?: string; // Track the S3 folder path for this user
+  uploadedImages?: {
+    originalName: string;
+    s3Key: string;
+    s3Url: string;
+    uploadTime: string;
+  }[];
 }
 
 class LocalStorageService {
@@ -17,24 +24,39 @@ class LocalStorageService {
     return `local_${Date.now()}_${Math.random().toString(36).substring(2)}`;
   }
 
-  // Store item locally with S3 integration
+  // Store item locally with S3 integration and detailed tracking
   async storeItemLocally(itemData: CreateFoodItemRequest, userId: string): Promise<LocalFoodItem> {
     try {
-      // Upload images to S3
+      // Upload images to S3 with enhanced tracking
       let imageUrls: string[] = [];
+      let uploadedImages: any[] = [];
+      
       if (itemData.images && itemData.images.length > 0) {
-        console.log(`Uploading ${itemData.images.length} images to S3...`);
+        console.log(`📸 Uploading ${itemData.images.length} images to S3 for user ${userId}...`);
         imageUrls = await s3Service.uploadMultipleImages(itemData.images, userId);
-        console.log('Images uploaded to S3:', imageUrls);
+        
+        // Create detailed image tracking
+        uploadedImages = itemData.images.map((file, index) => ({
+          originalName: file.name,
+          s3Key: `users/${userId}/food-items/image_${index}_${file.name}`, // This should match S3 key structure
+          s3Url: imageUrls[index],
+          uploadTime: new Date().toISOString(),
+          fileSize: file.size,
+          fileType: file.type
+        }));
+        
+        console.log('✅ Images uploaded to S3 with tracking:', uploadedImages);
       }
 
-      // Create local item with S3 image URLs
+      // Create local item with enhanced S3 tracking
       const localItem: LocalFoodItem = {
         id: this.generateLocalId(),
         localId: this.generateLocalId(),
         ...itemData,
         userId,
         images: imageUrls,
+        uploadedImages,
+        s3FolderPath: `users/${userId}/food-items/`,
         expiryDate: new Date(itemData.expiryDate),
         status: 'available',
         createdAt: new Date(),
@@ -53,10 +75,18 @@ class LocalStorageService {
       // Store in localStorage
       this.saveLocalItem(localItem);
       
-      console.log('Item stored locally with S3 images:', localItem);
+      console.log('✅ Item stored locally with enhanced S3 tracking:', {
+        id: localItem.id,
+        title: localItem.title,
+        userId: localItem.userId,
+        s3FolderPath: localItem.s3FolderPath,
+        imageCount: imageUrls.length,
+        uploadedImages: uploadedImages.length
+      });
+      
       return localItem;
     } catch (error) {
-      console.error('Error storing item locally:', error);
+      console.error('❌ Error storing item locally with S3 integration:', error);
       throw error;
     }
   }

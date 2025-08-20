@@ -39,6 +39,58 @@ export class SecureS3Service {
     backoffMultiplier: 2
   };
 
+  // 📁 Create user folder name in lastname_firstname format
+  private createUserFolderName(currentUser: any): string {
+    try {
+      console.log('👤 Processing user data for folder naming:', {
+        username: currentUser.username,
+        signInDetails: currentUser.signInDetails,
+        attributes: currentUser.attributes
+      });
+
+      // Try to get full name from user attributes
+      let firstName = '';
+      let lastName = '';
+
+      // Check different possible sources for name
+      if (currentUser.signInDetails?.loginId) {
+        // Extract from email if no other name available
+        const emailParts = currentUser.signInDetails.loginId.split('@')[0].split('.');
+        if (emailParts.length >= 2) {
+          firstName = emailParts[0];
+          lastName = emailParts[1];
+        }
+      }
+
+      // Override with actual name attributes if available
+      if (currentUser.attributes) {
+        firstName = currentUser.attributes.given_name || currentUser.attributes.name?.split(' ')[0] || firstName;
+        lastName = currentUser.attributes.family_name || currentUser.attributes.name?.split(' ')[1] || lastName;
+      }
+
+      // Fallback to username parts
+      if (!firstName && !lastName && currentUser.username) {
+        const usernameParts = currentUser.username.split(/[._-]/);
+        firstName = usernameParts[0] || 'user';
+        lastName = usernameParts[1] || 'unknown';
+      }
+
+      // Sanitize and format as lastname_firstname
+      const sanitizedLastName = (lastName || 'unknown').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const sanitizedFirstName = (firstName || 'user').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      
+      const folderName = `${sanitizedLastName}_${sanitizedFirstName}`;
+      console.log(`📁 Generated folder name: ${folderName} (from ${firstName} ${lastName})`);
+      
+      return folderName;
+    } catch (error) {
+      console.error('Error creating user folder name:', error);
+      // Fallback to user ID
+      const userId = currentUser.userId || currentUser.username || 'anonymous';
+      return userId.replace(/[^a-zA-Z0-9-]/g, '_').toLowerCase();
+    }
+  }
+
   // 🔐 Enhanced authentication with multiple fallback methods
   private async getValidCredentials(): Promise<any> {
     console.log('🔐 Starting enhanced authentication process...');
@@ -315,9 +367,8 @@ Technical details: ${primaryError instanceof Error ? primaryError.message : 'Unk
       // Get current user for folder structure
       const currentUser = await getCurrentUser();
       
-      // 🎯 BULLETPROOF USER IDENTIFICATION
-      const userId = currentUser.userId || currentUser.username || currentUser.signInDetails?.loginId || 'anonymous';
-      const userFolder = userId.replace(/[^a-zA-Z0-9-]/g, '_'); // Sanitize for S3 key
+      // 🎯 BULLETPROOF USER IDENTIFICATION with lastname_firstname format
+      const userFolder = this.createUserFolderName(currentUser);
       
       console.log(`📁 Creating user-specific folder: ${userFolder}`);
 
@@ -433,7 +484,10 @@ Technical details: ${primaryError instanceof Error ? primaryError.message : 'Unk
   // Upload multiple images with bulletproof reliability
   async uploadMultipleImages(files: File[], userId: string): Promise<string[]> {
     try {
-      const userFolder = userId.replace(/[^a-zA-Z0-9-]/g, '_');
+      // Get current user for proper folder naming
+      const currentUser = await getCurrentUser();
+      const userFolder = this.createUserFolderName(currentUser);
+      
       console.log(`🚀 Uploading ${files.length} images for user: ${userFolder}`);
       console.log(`📁 User folder structure: users/${userFolder}/food-items/`);
       
