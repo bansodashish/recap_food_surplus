@@ -28,6 +28,14 @@ interface Listing {
   price?: string;
 }
 
+interface UserStats {
+  activeListings: number;
+  donationsMade: number;
+  itemsSold: number;
+  rating: number;
+  sustainabilityScore: number;
+}
+
 export const PostLoginDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,26 +43,15 @@ export const PostLoginDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Overview');
   const [userItems, setUserItems] = useState<FoodItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
-  
-  // Calculate dynamic user stats based on actual items
-  const userStats = React.useMemo(() => {
-    const activeListings = userItems.filter(item => item.status === 'available').length;
-    const donationsMade = userItems.filter(item => item.type === 'donation' && item.status === 'completed').length;
-    const itemsSold = userItems.filter(item => item.type === 'sale' && item.status === 'completed').length;
-    const totalCO2Saved = userItems.reduce((total, item) => 
-      total + (item.sustainabilityMetrics?.co2Saved || 0), 0
-    );
-    
-    return {
-      activeListings,
-      donationsMade,
-      itemsSold,
-      rating: 4.8, // This would come from user reviews in real app
-      sustainabilityScore: Math.min(100, Math.round(totalCO2Saved * 10)) // Scale CO2 to score
-    };
-  }, [userItems]);
+  const [userStats] = useState<UserStats>({
+    activeListings: 12,
+    donationsMade: 4,
+    itemsSold: 0,
+    rating: 4.8,
+    sustainabilityScore: 85
+  });
 
-  // Load user's food items and calculate stats
+  // Load user's food items
   useEffect(() => {
     const loadUserItems = async () => {
       if (!user) return;
@@ -63,24 +60,6 @@ export const PostLoginDashboard: React.FC = () => {
       try {
         const items = await foodItemsService.getUserFoodItems(user.id);
         setUserItems(items);
-        
-        // Update user stats based on actual data
-        const activeCount = items.filter(item => item.status === 'available').length;
-        const donationCount = items.filter(item => item.type === 'donation').length;
-        const saleCount = items.filter(item => item.type === 'sale' && item.status === 'completed').length;
-        
-        // Calculate total sustainability impact
-        const totalCO2Saved = items.reduce((total, item) => 
-          total + (item.sustainabilityMetrics?.co2Saved || 0), 0
-        );
-        
-        console.log('📊 User stats calculated:', {
-          activeListings: activeCount,
-          donationsMade: donationCount,
-          itemsSold: saleCount,
-          totalCO2Saved: Math.round(totalCO2Saved * 100) / 100
-        });
-        
       } catch (error) {
         console.error('Error loading user items:', error);
       } finally {
@@ -98,7 +77,8 @@ export const PostLoginDashboard: React.FC = () => {
     if (tab !== 'Overview') {
       params.set('tab', tab);
     }
-    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    const queryString = params.toString();
+    const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
     window.history.replaceState({}, '', newUrl);
   };
 
@@ -376,125 +356,42 @@ export const PostLoginDashboard: React.FC = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
                     <p className="text-gray-600 mt-4">Loading your listings...</p>
                   </div>
-                ) : userItems.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-gray-900">Your Food Listings</h3>
-                      <button
-                        onClick={() => navigate('/donate')}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
-                      >
-                        Add New Item
-                      </button>
-                    </div>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                ) : (
+                  <>
+                    {userItems.length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold text-gray-900">Your Food Listings</h3>
+                          <button
+                            onClick={() => navigate('/donate')}
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          >
+                            Add New Item
+                          </button>
+                        </div>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {userItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-all duration-200">
-                          {/* Image Gallery */}
+                        <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
                           {item.images && item.images.length > 0 && (
-                            <div className="relative mb-4">
-                              <img 
-                                src={item.images[0]} 
-                                alt={item.title}
-                                className="w-full h-48 object-cover rounded-lg"
-                              />
-                              {item.images.length > 1 && (
-                                <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-xs">
-                                  +{item.images.length - 1} more
-                                </div>
-                              )}
-                            </div>
+                            <img 
+                              src={item.images[0]} 
+                              alt={item.title}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                            />
                           )}
-                          
-                          {/* Item Details */}
-                          <div className="space-y-3">
-                            <div>
-                              <h4 className="font-bold text-lg text-gray-900 mb-1">{item.title}</h4>
-                              <p className="text-sm text-gray-600 line-clamp-3">{item.description}</p>
-                            </div>
-                            
-                            {/* Item Info Grid */}
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div className="flex items-center space-x-1">
-                                <span className="font-medium text-gray-700">Category:</span>
-                                <span className="text-gray-600 capitalize">{item.category}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="font-medium text-gray-700">Type:</span>
-                                <span className="text-gray-600 capitalize">{item.type}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="font-medium text-gray-700">Quantity:</span>
-                                <span className="text-gray-600">{item.quantity}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="font-medium text-gray-700">Condition:</span>
-                                <span className="text-gray-600 capitalize">{item.condition}</span>
-                              </div>
-                            </div>
-                            
-                            {/* Location and Dates */}
-                            <div className="space-y-1 text-xs">
-                              <div className="flex items-center space-x-1">
-                                <MapPin className="h-3 w-3 text-gray-400" />
-                                <span className="text-gray-600">{item.location.address || item.location.city}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="h-3 w-3 text-gray-400" />
-                                <span className="text-gray-600">
-                                  Expires: {item.expiryDate instanceof Date ? item.expiryDate.toLocaleDateString() : new Date(item.expiryDate).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-gray-500">
-                                  Created: {item.createdAt instanceof Date ? item.createdAt.toLocaleDateString() : new Date(item.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {/* Status and Metrics */}
-                            <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                              <div className="flex items-center space-x-2">
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  item.status === 'available' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : item.status === 'reserved'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {item.status.toUpperCase()}
-                                </span>
-                                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                  <Eye className="h-3 w-3" />
-                                  <span>{item.viewCount || 0} views</span>
-                                </div>
-                              </div>
-                              {item.sustainabilityMetrics && (
-                                <div className="text-xs text-green-600 font-medium">
-                                  CO₂: {item.sustainabilityMetrics.co2Saved}kg saved
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Action Buttons */}
-                            <div className="flex space-x-2 pt-2">
-                              <button
-                                onClick={() => navigate(`/my-items`)}
-                                className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
-                              >
-                                Manage
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (item.images && item.images.length > 0) {
-                                    window.open(item.images[0], '_blank');
-                                  }
-                                }}
-                                className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-                              >
-                                View
-                              </button>
-                            </div>
+                          <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>Status: {item.status}</span>
+                            <span>Views: {item.viewCount || 0}</span>
+                          </div>
+                          <div className="mt-3 flex space-x-2">
+                            <button
+                              onClick={() => navigate(`/my-items`)}
+                              className="flex-1 bg-gray-100 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-200"
+                            >
+                              Manage
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -512,6 +409,8 @@ export const PostLoginDashboard: React.FC = () => {
                       Create Your First Listing
                     </button>
                   </div>
+                )}
+                  </>
                 )}
               </div>
             )}

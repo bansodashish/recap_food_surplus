@@ -482,7 +482,7 @@ Technical details: ${primaryError instanceof Error ? primaryError.message : 'Unk
   // 🎯 LEGACY COMPATIBILITY METHODS FOR FOOD ITEMS SERVICE
 
   // Upload multiple images with bulletproof reliability
-  async uploadMultipleImages(files: File[], userId: string): Promise<string[]> {
+  async uploadMultipleImages(files: File[], _userId?: string): Promise<string[]> {
     try {
       // Get current user for proper folder naming
       const currentUser = await getCurrentUser();
