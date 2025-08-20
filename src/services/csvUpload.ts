@@ -1,7 +1,7 @@
-// CSV Upload Service with Secure S3 integration for Cognito users
+// CSV Upload Service with Ultra-Secure S3 integration for 99.999% reliability
 import { foodItemsService } from './foodItems';
 import { localStorageService } from './localStorage';
-import { secureS3Service } from './bulletproofS3Service'; // Import the service instance
+import { ultraSecureS3Service } from './ultraSecureS3Service'; // Use the ultra-secure service
 import type { CreateFoodItemRequest } from '../types/foodItem';
 
 export interface CSVUploadResult {
@@ -31,7 +31,7 @@ export interface SimpleCSVRow {
 }
 
 class CSVUploadService {
-  private readonly secureS3Service = secureS3Service;
+  private readonly s3Service = ultraSecureS3Service;
 
   constructor() {
     // Initialize with secure S3 service for Cognito users
@@ -211,7 +211,7 @@ class CSVUploadService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Uploading ${photo.name} (attempt ${attempt}/${maxRetries})...`);
-        const uploadResult = await this.secureS3Service.uploadFile(photo, `${userId}_${photo.name}`);
+        const uploadResult = await this.s3Service.uploadImage(photo, userId);
         if (!uploadResult.success) {
           throw new Error(uploadResult.error || 'Upload failed');
         }

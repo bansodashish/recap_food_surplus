@@ -106,7 +106,7 @@ class LocalStorageService {
         // Cleanup S3 images
         if (itemToDelete.images && itemToDelete.images.length > 0) {
           await Promise.all(
-            itemToDelete.images.map(url => s3Service.deleteImage(url).catch(err => 
+            itemToDelete.images.map(url => s3Service.deleteImage(url).catch((err: unknown) => 
               console.warn('Failed to delete S3 image:', url, err)
             ))
           );
