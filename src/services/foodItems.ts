@@ -4,12 +4,19 @@ import { localStorageService } from './localStorage';
 
 // Mock API base URL - replace with your actual API endpoint
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 export class FoodItemsService {
   /**
    * Get user's item count for subscription limit checking (includes local items)
    */
   async getUserItemCount(userId: string): Promise<number> {
+    // In demo mode, only use local storage
+    if (DEMO_MODE) {
+      console.log('🎭 Demo mode: Using local storage for user item count');
+      return localStorageService.getUserItemCount(userId);
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/food-items/user/${userId}/count`, {
         method: 'GET',
@@ -73,7 +80,7 @@ export class FoodItemsService {
         itemData.originalPrice || itemData.price || 0
       );
 
-      // Prepare the item data for API
+      // Prepare the item data
       const foodItemData = {
         ...itemData,
         userId,
@@ -87,6 +94,13 @@ export class FoodItemsService {
         viewCount: 0,
         interestedUsers: [],
       };
+
+      // In demo mode, save to local storage instead of API
+      if (DEMO_MODE) {
+        console.log('🎭 Demo mode: Saving item to local storage');
+        const savedItem = await localStorageService.storeItemLocally(itemData, userId);
+        return savedItem;
+      }
 
       // Make API call to create item
       const response = await fetch(`${API_BASE_URL}/api/food-items`, {
@@ -171,6 +185,12 @@ export class FoodItemsService {
    * Get food items with optional filters
    */
   async getFoodItems(filters?: FoodItemFilters): Promise<FoodItem[]> {
+    // In demo mode, use local storage
+    if (DEMO_MODE) {
+      console.log('🎭 Demo mode: Getting items from local storage');
+      return localStorageService.getAllLocalItems();
+    }
+
     try {
       const queryParams = this.buildQueryParams(filters);
 
@@ -202,6 +222,12 @@ export class FoodItemsService {
    * Get food items by user ID with localStorage fallback
    */
   async getUserFoodItems(userId: string): Promise<FoodItem[]> {
+    // In demo mode, use local storage
+    if (DEMO_MODE) {
+      console.log('🎭 Demo mode: Getting user items from local storage');
+      return localStorageService.getUserLocalItems(userId);
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/food-items/user/${userId}`, {
         headers: {
