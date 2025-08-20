@@ -126,7 +126,8 @@ export function DonatePage() {
 
       await foodItemsService.createFoodItem(itemData, user.sub);
       
-      // Success - redirect to my items page
+      // Success message and redirect
+      alert('🎉 Success! Your food donation has been listed successfully. It will appear in your profile under "My Items".');
       navigate('/my-items');
     } catch (error) {
       console.error('Error creating item:', error);

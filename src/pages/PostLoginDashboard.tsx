@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { foodItemsService } from '../services/foodItems';
+import type { FoodItem } from '../types/foodItem';
 import { 
   PlusCircle, 
   Heart, 
@@ -38,6 +40,8 @@ export const PostLoginDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
+  const [userItems, setUserItems] = useState<FoodItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
   const [userStats] = useState<UserStats>({
     activeListings: 12,
     donationsMade: 4,
@@ -45,6 +49,25 @@ export const PostLoginDashboard: React.FC = () => {
     rating: 4.8,
     sustainabilityScore: 85
   });
+
+  // Load user's food items
+  useEffect(() => {
+    const loadUserItems = async () => {
+      if (!user) return;
+      
+      setLoadingItems(true);
+      try {
+        const items = await foodItemsService.getUserFoodItems(user.id);
+        setUserItems(items);
+      } catch (error) {
+        console.error('Error loading user items:', error);
+      } finally {
+        setLoadingItems(false);
+      }
+    };
+
+    loadUserItems();
+  }, [user]);
 
   // Mock data for recent listings - in a real app, this would come from an API
   const [recentListings] = useState<Listing[]>([
@@ -314,15 +337,64 @@ export const PostLoginDashboard: React.FC = () => {
             )}
 
             {activeTab === 'My Listings' && (
-              <div className="text-center py-8">
-                <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Your listings will appear here</p>
-                <button
-                  onClick={() => navigate('/add-item')}
-                  className="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Create Your First Listing
-                </button>
+              <div>
+                {loadingItems ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="text-gray-600 mt-4">Loading your listings...</p>
+                  </div>
+                ) : userItems.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold text-gray-900">Your Food Listings</h3>
+                      <button
+                        onClick={() => navigate('/donate')}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      >
+                        Add New Item
+                      </button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {userItems.map((item) => (
+                        <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                          {item.images && item.images.length > 0 && (
+                            <img 
+                              src={item.images[0]} 
+                              alt={item.title}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                            />
+                          )}
+                          <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
+                          <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.description}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-500">
+                            <span>Status: {item.status}</span>
+                            <span>Views: {item.viewCount || 0}</span>
+                          </div>
+                          <div className="mt-3 flex space-x-2">
+                            <button
+                              onClick={() => navigate(`/my-items`)}
+                              className="flex-1 bg-gray-100 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-200"
+                            >
+                              Manage
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No listings yet</p>
+                    <p className="text-sm text-gray-500 mb-4">Start by adding your first food item</p>
+                    <button
+                      onClick={() => navigate('/donate')}
+                      className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Create Your First Listing
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

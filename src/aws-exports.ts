@@ -6,7 +6,7 @@ const awsmobile = {
   aws_user_pools_web_client_id: "flshpq7e5kdqa00fre30g0t9p", // Updated to current Client ID
   
   // 🔑 Identity Pool Configuration for S3 Access - CRITICAL FIX
-  aws_cognito_identity_pool_id: "eu-west-1:096130a0-347a-446d-9749-79c95b856163",
+  aws_cognito_identity_pool_id: "eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078",
   
   // 📦 Storage Configuration
   aws_user_files_s3_bucket: "bansoash-poc",
@@ -29,14 +29,14 @@ const awsmobile = {
     region: "eu-west-1",
     userPoolId: "eu-west-1_Y2tRumZ22",
     userPoolWebClientId: "flshpq7e5kdqa00fre30g0t9p", // Updated to current Client ID
-    identityPoolId: "eu-west-1:096130a0-347a-446d-9749-79c95b856163",
+    identityPoolId: "eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078",
   },
   
   // 📦 Storage Configuration
   Storage: {
     region: "eu-west-1",
     bucket: "bansoash-poc",
-    identityPoolId: "eu-west-1:096130a0-347a-446d-9749-79c95b856163",
+    identityPoolId: "eu-west-1:c12d8304-37ee-4a49-bedb-32b3c4c2d078",
   }
 };
 
