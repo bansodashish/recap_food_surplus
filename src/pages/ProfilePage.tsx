@@ -140,13 +140,23 @@ export function ProfilePage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/add-item')}
+                  onClick={() => navigate('/donate')}
                   className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3"
                 >
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                     <Settings className="h-4 w-4 text-green-600" />
                   </div>
                   <span className="text-gray-700">List New Item</span>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/dashboard?tab=My%20Listings')}
+                  className="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3"
+                >
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <BarChart3 className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <span className="text-gray-700">List Your Surplus</span>
                 </button>
                 
                 <button

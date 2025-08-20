@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { foodItemsService } from '../services/foodItems';
 import type { FoodItem } from '../types/foodItem';
 import { 
@@ -39,7 +39,8 @@ interface UserStats {
 export const PostLoginDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('Overview');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'Overview');
   const [userItems, setUserItems] = useState<FoodItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [userStats] = useState<UserStats>({
@@ -68,6 +69,17 @@ export const PostLoginDashboard: React.FC = () => {
 
     loadUserItems();
   }, [user]);
+
+  // Update URL when tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams();
+    if (tab !== 'Overview') {
+      params.set('tab', tab);
+    }
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    window.history.replaceState({}, '', newUrl);
+  };
 
   // Mock data for recent listings - in a real app, this would come from an API
   const [recentListings] = useState<Listing[]>([
@@ -227,7 +239,7 @@ export const PostLoginDashboard: React.FC = () => {
               {tabs.map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => handleTabChange(tab)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab
                       ? 'border-green-500 text-green-600'
@@ -311,7 +323,7 @@ export const PostLoginDashboard: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button
-                      onClick={() => navigate('/add-item')}
+                      onClick={() => navigate('/donate')}
                       className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <PlusCircle className="h-5 w-5" />
@@ -325,7 +337,7 @@ export const PostLoginDashboard: React.FC = () => {
                       <span>Request Item</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab('Impact Metrics')}
+                      onClick={() => handleTabChange('Impact Metrics')}
                       className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2"
                     >
                       <Activity className="h-5 w-5" />
